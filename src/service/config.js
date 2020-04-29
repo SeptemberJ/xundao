@@ -1,0 +1,1 @@
+export const base = "http://172.16.52.215:8082/xundaoJK/"

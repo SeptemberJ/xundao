@@ -1,0 +1,66 @@
+.Index{
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  .topBlock{
+    width: 120%;
+    height: 550px;
+    background-image: url('https://hbimg.huabanimg.com/07813a671701698bfca305184378cd5491ce4a475452c-3iBG8Y_fw658');
+    // background-image: url('https://hbimg.huabanimg.com/d7e2d2bb491c93d6f475830ff332a1bc760eee1b259b1-k2hqwn_fw658');
+    background-position: center top;
+    background-size: cover;
+    // background-color: #6190e8;
+    border-radius: 0 0 50% 50%;
+  }
+  .mainBlock{
+    width: 100%;
+    height: calc(100% - 550px - 200px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: space-between;
+    padding: 100px 0;
+    .logoBlock{
+      width: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text{
+        font-size: 80px;
+        margin-top: 30px;
+        color: #6190e8;
+      }
+      image{
+        width: 120px;
+        height: 120px
+      }
+    }
+  }
+  .Authorization{
+    width: 50%;
+    // margin-top: 300px;
+  }
+}
+
+// .frostedGlass:after {
+//   content: '';
+//   position: absolute;
+//   width: 80%;
+//   height: 80%;
+//   top: 10%;
+//   left: 10%;
+//   background-color: rgba(255,255,255,0.8);
+//   background: url('https://hbimg.huabanimg.com/649fb0b73bee7f301bc7d4991bf4c1fa51b7711a1e332-asDQSg_fw658');
+//   background-position: center top;
+//   background-size: cover;
+//   background-attachment: fixed;
+//   -webkit-filter: blur(5px);
+//   -moz-filter: blur(5px);
+//   -ms-filter: blur(5px);
+//   -o-filter: blur(5px);
+//   filter: blur(5px);
+//   margin: -30px;
+//   z-index: -1;
+// }
