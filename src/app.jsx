@@ -20,14 +20,20 @@ class App extends Component {
   config = {
     pages: [
       'pages/index/index',
-      'pages/image/index'
+      'pages/image/index',
+      'pages/order/index'
     ],
     window: {
-      navigationStyle: 'custom',
+      // navigationStyle: 'custom',
       backgroundTextStyle: 'light',
-      navigationBarBackgroundColor: '#6190e8',
+      navigationBarBackgroundColor: '#ffffff', // #6190e8
       navigationBarTitleText: 'WeChat',
       navigationBarTextStyle: 'black'
+    },
+    permission: {
+      'scope.userLocation': {
+        desc: "你的位置信息将用于拍摄图片时的信息显示"
+      }
     }
   }
 

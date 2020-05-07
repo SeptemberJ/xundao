@@ -1,0 +1,34 @@
+.Order{
+  width: 100%;
+  height: 100vh;
+  .orderList{
+    width: 100%;
+    height: calc(100vh - 50px);
+    background-color: #F3F0F3;
+    .orderItem{
+      width: calc(100% - 90px);
+      padding: 20px 25px;
+      background: #ffffff;
+      margin: 30px auto 30px auto;
+      .itemBar{
+        width: 100%;
+        height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        View{
+          display: flex;
+          flex-grow: 1;
+          align-items: center;
+          justify-content: space-between;
+          Text{
+            color: #555555;
+          }
+          Text:first-of-type{
+            color: #000000;
+          }
+        }
+      }
+    }
+  }
+}

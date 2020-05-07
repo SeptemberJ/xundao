@@ -1,6 +1,7 @@
 import {
   ADD,
-  MINUS
+  MINUS,
+  UPDATEUSERINFO
 } from '../constants/counter'
 
 export const add = () => {
@@ -11,6 +12,14 @@ export const add = () => {
 export const minus = () => {
   return {
     type: MINUS
+  }
+}
+export const updateUserInfo = (openid, session_key, userid) => {
+  return {
+    type: UPDATEUSERINFO,
+    openid: openid,
+    session_key: session_key,
+    userid: userid
   }
 }
 

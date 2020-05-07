@@ -1,8 +1,8 @@
 import Taro, { Component } from '@tarojs/taro'
-import { View, Button, Text, Image } from '@tarojs/components'
+import { View, Text, Image } from '@tarojs/components'
 import { connect } from '@tarojs/redux'
-import { AtButton, AtModal } from 'taro-ui'
-import { add, minus, asyncAdd } from '../../actions/counter'
+import { AtButton } from 'taro-ui'
+import { add, minus, updateUserInfo } from '../../actions/counter'
 import send from '../../service/api'
 import './index.scss'
 
@@ -16,8 +16,8 @@ import './index.scss'
   dec () {
     dispatch(minus())
   },
-  asyncAdd () {
-    dispatch(asyncAdd())
+  toUpdateUserInfo (openid, session_key, userid) {
+    dispatch(updateUserInfo(openid, session_key, userid))
   }
 }))
 class Index extends Component {
@@ -29,38 +29,91 @@ class Index extends Component {
   constructor(props) {
     super(props)
     this.state = {
+      showBt: false,
       isOpened: false
     }
   }
   componentWillReceiveProps (nextProps) {
-    console.log(this.props, nextProps)
+    // console.log(this.props, nextProps)
   }
   componentWillMount () {
-    Taro.navigateTo({
-      url: '/pages/image/index'
-    })
-    // Taro.login({
-    //   success(res) {
-    //     send.get('getOpen_id', {code: res.code}).then((res) => {
-    //       console.log(res)
-    //     })
-    //   }
+    // Taro.navigateTo({
+    //   url: '/pages/image/index'
     // })
   }
   componentWillUnmount () {
   }
 
-  componentDidShow () { }
+  componentDidShow () {
+    let _this = this
+    Taro.login({
+      success(res) {
+        send.get('getOpen_id', {code: res.code}).then((res) => {
+          switch (res.data.code) {
+            case 0:
+              // 未授权
+              _this.props.toUpdateUserInfo(res.data.openid, res.data.session_key, '')
+              Taro.showModal({
+                title: '提示',
+                content: `您的账号尚未进行授权，请先进行授权`,
+                showCancel: false
+              }).then(res => {
+                _this.setState({
+                  showBt: true
+                })
+              })
+              break
+            case 1:
+              _this.props.toUpdateUserInfo(res.data.openid, res.data.session_key, res.data.userid)
+              //已授权进入订单界面
+              Taro.redirectTo({
+                url: '/pages/order/index'
+              })
+              break
+          }
+        })
+      }
+    })
+  }
 
   componentDidHide () { }
   getPhoneNumber = (e) => {
+    let _this = this
+    let openid = this.props.counter.openid
+    let sessionKey = this.props.counter.session_key
     if (e.detail.errMsg == 'getPhoneNumber:ok') {
-      send.get('getPhone', {encryptedData: e.detail.encryptedData, iv: e.detail.iv, session_key: ''}).then((res) => {
-        console.log(res)
+      send.get('getPhone', {encryptedData: e.detail.encryptedData, iv: e.detail.iv, session_key: sessionKey}).then((res) => {
+        // console.log(res)
+        send.post('updateOpenid', {openid: openid, fmobile: res.data.phoneNumber}).then((res) => {
+          // console.log(res)
+          switch (res.data.code) {
+            case '1':
+              _this.props.toUpdateUserInfo(openid, sessionKey, res.data.userid)
+              Taro.showToast({
+                title: '授权成功',
+                icon: 'success',
+                duration: 1000
+              }).then(
+                Taro.navigateTo({
+                  url: '/pages/order/index'
+                })
+              )
+              break
+            default:
+              Taro.showToast({
+                title: '授权失败',
+                icon: 'none',
+                duration: 1500
+              })
+          }
+        })
       })
     } else {
-      this.setState({
-        isOpened: true
+      Taro.showModal({
+        title: '提示',
+        content: `为了更好地使用循道小程序，请允许小程序获取您微信绑定的手机号。`,
+        showCancel: false
+      }).then(res => {
       })
     }
   }
@@ -79,22 +132,12 @@ class Index extends Component {
             <Image src='https://camo.githubusercontent.com/3e1b76e514b895760055987f164ce6c95935a3aa/687474703a2f2f73746f726167652e333630627579696d672e636f6d2f6d74642f686f6d652f6c6f676f2d3278313531333833373932363730372e706e67'/>
             <Text>循道</Text>
           </View>
-          <View className='Authorization'>
+          {this.state.showBt && 
+            <View className='Authorization'>
             <AtButton circle type="primary" openType="getPhoneNumber" onGetPhoneNumber={this.getPhoneNumber}>微信授权登录</AtButton>
           </View>
+          }
         </View>
-        {/* <Button className='add_btn' onClick={this.props.add}>+</Button>
-        <Button className='dec_btn' onClick={this.props.dec}>-</Button>
-        <Button className='dec_btn' onClick={this.props.asyncAdd}>async</Button>
-        <View><Text>{this.props.counter.num}</Text></View>
-        <View><Text>Hello, World</Text></View> */}
-        <AtModal
-          isOpened={this.state.isOpened}
-          title='提示'
-          confirmText='确认'
-          onConfirm={ this.handleConfirm }
-          content='为了更好地使用循道小程序，请允许小程序获取您微信绑定的手机号。'
-        />
       </View>
     )
   }
