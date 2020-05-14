@@ -5,3 +5,9 @@
 page{
   font-size: 32px;
 }
+.at-input {
+  padding: 0px !important;
+}
+.at-input::after {
+  border-bottom-width: 0px !important;
+}

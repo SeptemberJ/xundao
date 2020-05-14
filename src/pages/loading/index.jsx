@@ -2,7 +2,7 @@ import Taro, { Component } from '@tarojs/taro'
 import { View, Text, Image } from '@tarojs/components'
 import { connect } from '@tarojs/redux'
 import { AtButton } from 'taro-ui'
-import { add, minus, updateUserInfo } from '../../actions/counter'
+import { updateUserInfo } from '../../actions/counter'
 import send from '../../service/api'
 import './index.scss'
 
@@ -10,12 +10,6 @@ import './index.scss'
 @connect(({ counter }) => ({
   counter
 }), (dispatch) => ({
-  add () {
-    dispatch(add())
-  },
-  dec () {
-    dispatch(minus())
-  },
   toUpdateUserInfo (openid, session_key, userid) {
     dispatch(updateUserInfo(openid, session_key, userid))
   }
@@ -34,12 +28,8 @@ class Index extends Component {
     }
   }
   componentWillReceiveProps (nextProps) {
-    // console.log(this.props, nextProps)
   }
   componentWillMount () {
-    // Taro.navigateTo({
-    //   url: '/pages/image/index'
-    // })
   }
   componentWillUnmount () {
   }
@@ -65,7 +55,7 @@ class Index extends Component {
               break
             case 1:
               _this.props.toUpdateUserInfo(res.data.openid, res.data.session_key, res.data.userid)
-              //已授权进入订单界面
+              // 已授权进入订单界面
               Taro.redirectTo({
                 url: '/pages/order/index'
               })
@@ -76,16 +66,13 @@ class Index extends Component {
     })
   }
 
-  componentDidHide () { }
   getPhoneNumber = (e) => {
     let _this = this
     let openid = this.props.counter.openid
     let sessionKey = this.props.counter.session_key
     if (e.detail.errMsg == 'getPhoneNumber:ok') {
       send.get('getPhone', {encryptedData: e.detail.encryptedData, iv: e.detail.iv, session_key: sessionKey}).then((res) => {
-        // console.log(res)
         send.post('updateOpenid', {openid: openid, fmobile: res.data.phoneNumber}).then((res) => {
-          // console.log(res)
           switch (res.data.code) {
             case '1':
               _this.props.toUpdateUserInfo(openid, sessionKey, res.data.userid)
@@ -117,6 +104,7 @@ class Index extends Component {
       })
     }
   }
+
   handleConfirm = () => {
     this.setState({
       isOpened: false

@@ -1,7 +1,8 @@
 import {
   ADD,
   MINUS,
-  UPDATEUSERINFO
+  UPDATEUSERINFO,
+  CHANGETAB
 } from '../constants/counter'
 
 export const add = () => {
@@ -20,6 +21,12 @@ export const updateUserInfo = (openid, session_key, userid) => {
     openid: openid,
     session_key: session_key,
     userid: userid
+  }
+}
+export const changeTab = (tabIdx) => {
+  return {
+    type: CHANGETAB,
+    tabIdx: tabIdx
   }
 }
 

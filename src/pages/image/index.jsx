@@ -1,9 +1,10 @@
 import Taro, { Component } from '@tarojs/taro'
-import { View, Button, Text, Canvas, Image } from '@tarojs/components'
+import { View, Text, Canvas, Image } from '@tarojs/components'
 import { connect } from '@tarojs/redux'
 import { formatTime } from '../../utils/index'
-import { AtImagePicker } from 'taro-ui'
+import { AtImagePicker, AtButton, AtTextarea } from 'taro-ui'
 import './index.scss'
+import send from '../../service/api'
 var COS = require('cos-wx-sdk-v5')
 var cos = new COS({
   SecretId: 'AKIDQdcMwIWBF5TcWCk3IWXO3UihRvKVf8tR',
@@ -28,47 +29,50 @@ cos.getService(function (err, data) {
 export default class Picture extends Component {
 
   config = {
-    navigationBarTitleText: '上传图片'
+    navigationBarTitleText: '勘察结果提交'
   }
 
   constructor(props) {
     super(props)
     this.state = {
+      id: '',
       workno: '',
       latitude: '',
       longitude: '',
+      loading: false,
       files: [],
+      note: '',
       img: 'https://hbimg.huabanimg.com/a111ea2e9fc5024d15194c7e022ecf28f66470b64759-0Ky12e_sq75sf'
     }
   }
   componentWillMount () {
     this.setState({
+      id: this.$router.params.id,
       workno: this.$router.params.workno
     })
   }
   componentDidShow () {
     // 获取定位
-    // this.getLocation()
     this.checkAuth()
   }
   onChange = (files, doType, index) => {
     this.setState({
       files
     })
-    console.log(index, files, this.state.files.length)
-    // cos.postObject({
-    //   Bucket: 'qpy1992-1257359561',
-    //   Region: 'ap-shanghai',
-    //   Key: this.state.workno + '/survey/' + this.state.files.length + '.png',
-    //   FilePath: files[0].file.path,
-    //   onProgress: function (info) {
-    //     console.log('onProgress---');
-    //     console.log(JSON.stringify(info));
-    //   }
-    // }, function (err, data) {
-    //   console.log('function back---');
-    //   console.log(err || data);
-    // })
+    console.log(index, files, files.length, (files[files.length - 1]).file.path)
+    cos.postObject({
+      Bucket: 'qpy1992-1257359561',
+      Region: 'ap-shanghai',
+      Key: this.state.workno + '/survey/' + files.length + '.png',
+      FilePath: (files[files.length - 1]).file.path,
+      onProgress: function (info) {
+        console.log('onProgress---');
+        console.log(JSON.stringify(info));
+      }
+    }, function (err, data) {
+      console.log('function back---');
+      console.log(err || data);
+    })
     // if (doType == 'remove') {
     //   this.setState({
     //     files
@@ -226,9 +230,46 @@ export default class Picture extends Component {
       urls: urls
     })
   }
-  handleClickBack = () => {
-    Taro.redirectTo({
-      url: '/pages/index/index'
+  submit = () => {
+    this.setState({
+      loading: true
+    })
+    let fcontent = this.state.files.map((item, id) => {
+      return {
+        fobjectname: this.state.workno + '/survey/' + (id + 1) + '.png',
+        lng: this.state.longitude,
+        lat: this.state.latitude
+      }
+    })
+    send.post('cos/uploadSurvey', {id: this.state.id, surveyNote: this.state.note, fcontent: JSON.stringify(fcontent)}).then((res) => {
+      switch (res.data.respCode) {
+        case '0':
+          Taro.showToast({
+            title: '提交成功',
+            icon: 'success',
+            duration: 1500
+          }).then(
+            this.setState({
+              loading: false
+            })
+          )
+          break
+        default:
+          Taro.showToast({
+            title: '提交失败',
+            icon: 'none',
+            duration: 1500
+          }).then(
+            this.setState({
+              loading: false
+            })
+          )
+      }
+    })
+  }
+  changeNote = (note) => {
+    this.setState({
+      note
     })
   }
   getLocation = () => {
@@ -260,6 +301,12 @@ export default class Picture extends Component {
             onChange={this.onChange}
             onImageClick={this.onImageClick}
           />
+        </View>
+        <View className="note">
+          <AtTextarea style='background:#fff;width:calc(100% - 40px);padding:20rpx 20rpx 0 20rpx;' maxLength={200} height={300} autoHeight placeholder='请输入勘察备注' value={this.state.note} onChange={e => this.changeNote(e)}/>
+        </View>
+        <View style="width:90%;margin-top:40px;">
+          <AtButton loading={this.state.loading} type='primary' onClick={this.submit}>提交</AtButton>
         </View>
         {/* <Canvas class='canvas' style="width:100%;height:100vh;top:30px;opacity: 0;" canvasId="firstCanvas"></Canvas> */}
       </View>

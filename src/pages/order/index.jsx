@@ -1,18 +1,21 @@
 import Taro, { Component } from '@tarojs/taro'
-import { View, Text, ScrollView } from '@tarojs/components'
-import { AtTabBar }  from 'taro-ui'
+import { View, Text, Image, ScrollView } from '@tarojs/components'
+import { AtTabBar, AtButton }  from 'taro-ui'
 import { connect } from '@tarojs/redux'
-import { add } from '../../actions/counter'
+import { changeTab } from '../../actions/counter'
 import send from '../../service/api'
 import './index.scss'
-
+import kanchaIcon from '../../images/kancha.png'
+import anzhuang from '../../images/anzhuang.png'
+import shenhe from '../../images/shenhe.png'
+import wancheng from '../../images/wancheng.png'
 
 @connect(({ counter }) => ({
   counter
 }), (dispatch) => ({
-  add () {
-    dispatch(add())
-  },
+  changeTab (tabIdx) {
+    dispatch(changeTab(tabIdx))
+  }
 }))
 class Order extends Component {
 
@@ -31,7 +34,16 @@ class Order extends Component {
     }
   }
 
-  componentDidShow () {
+  // componentDidShow () {
+  componentWillMount () {
+    if (this.$router.params.tab) {
+      this.setState({
+        currentTabIdx: Number(this.$router.params.tab)
+      })
+      this.getOrderList(null, Number(this.$router.params.tab) + 1)
+    } else {
+      this.getOrderList(null, this.state.currentTabIdx + 1)
+    }
     Taro.getLocation({
       type: 'wgs84',
       success: (res) => {
@@ -39,7 +51,6 @@ class Order extends Component {
       fail:  (err) => {
       }
     })
-    this.getOrderList(null, this.state.currentTabIdx + 1)
   }
 
   getOrderList = (curPage, fstatus, reflash) => {
@@ -50,7 +61,12 @@ class Order extends Component {
             orderList: reflash ? res.data.data : [...this.state.orderList, ...res.data.data]
           })
           if (curPage && res.data.data.length == 0) {
-            Taro.stopPullDownRefresh()
+            // Taro.stopPullDownRefresh()
+            Taro.showToast({
+              title: '无更多数据',
+              icon: 'none',
+              duration: 2000
+            })
             this.setState({
               noMore: true
             })
@@ -58,7 +74,7 @@ class Order extends Component {
               this.setState({
                 noMore: false
               })
-            }, 1000)
+            }, 2000)
           }
           //  _this.props.toUpdateUserInfo(openid, sessionKey, res.data.userid)
           break
@@ -71,6 +87,7 @@ class Order extends Component {
       }
     })
   }
+
   changeTab =  (curIdx) => {
     if (curIdx != this.state.currentTabIdx) {
       this.setState({
@@ -80,13 +97,29 @@ class Order extends Component {
       this.getOrderList(1, curIdx + 1, true)
     }
   }
-  toUpload = (workno) => {
+
+  toUpload = (fstatus, workno, id) => {
+    // e.stopPropagation()
+    // 勘察
+    if (fstatus == 1) {
+      Taro.navigateTo({
+        url: '/pages/survey/index?workno=' + workno + '&id=' + id
+      })
+    }
+    // 安装
+    if (fstatus == 2) {
+      Taro.navigateTo({
+        url: '/pages/install/index?workno=' + workno + '&id=' + id
+      })
+    }
+  }
+
+  toDetail = (id) => {
     Taro.navigateTo({
-      url: '/pages/image/index?workno=' + workno
+      url: '/pages/detail/index?id=' + id
     })
   }
-  onScroll = (e) => {
-  }
+
   onScrollToLower = () => {
     console.log('on bottom---')
     let curPage = this.state.pageNo + 1
@@ -99,42 +132,54 @@ class Order extends Component {
   render () {
     const { orderList } = this.state
     const orders = orderList.map((order) => {
-      return <View key={order.id} className="orderItem" onClick={this.toUpload(order.workno)}>
+      return <View key={order.id} className="orderItem">
           <View className="itemBar">
-            <View>
-              <Text>工单号：{this.state.pageNo}</Text>
-              <Text>{order.workno}</Text>
+            <Image  src={order.fstatus == '1' ? kanchaIcon : (order.fstatus == '2' ? anzhuang : (order.fstatus == '3' ? shenhe : (wancheng)))} />
+            {
+              order.fstatus == 1 && <AtButton type='secondary' size='small' onClick={this.toUpload.bind(this, order.fstatus, order.workno, order.id)}>提交勘察</AtButton>
+            }
+            {
+              order.fstatus == 2 && <AtButton type='primary' size='small' onClick={this.toUpload.bind(this, order.fstatus, order.workno, order.id)}>安装提交</AtButton>
+            }
+          </View>
+          <View onClick={this.toDetail.bind(this, order.id)}>
+            <View className="itemBar">
+              <View>
+                {/* <Text>工单号：{this.state.pageNo}</Text> */}
+                <Text>工单号：</Text>
+                <Text>{order.workno}</Text>
+              </View>
             </View>
-          </View>
-          <View className="itemBar">
-            <View>
-              <Text>车主姓名：</Text>
-              <Text>{order.driver_name}</Text>
+            <View className="itemBar">
+              <View>
+                <Text>车主姓名：</Text>
+                <Text>{order.driver_name}</Text>
+              </View>
             </View>
-          </View>
-          <View className="itemBar">
-            <View>
-              <Text>车主电话：</Text>
-              <Text>{order.driver_phone}</Text>
+            <View className="itemBar">
+              <View>
+                <Text>车主电话：</Text>
+                <Text>{order.driver_phone}</Text>
+              </View>
             </View>
-          </View>
-          <View className="itemBar">
-            <View>
-              <Text>建桩联系人：</Text>
-              <Text>{order.construct_stake_contact}</Text>
+            <View className="itemBar">
+              <View>
+                <Text>建桩联系人：</Text>
+                <Text>{order.construct_stake_contact}</Text>
+              </View>
             </View>
-          </View>
-          <View className="itemBar">
-            <View>
-              <Text>建桩联系电话：</Text>
-              <Text>{order.construct_stake_phone}</Text>
+            <View className="itemBar">
+              <View>
+                <Text>建桩联系电话：</Text>
+                <Text>{order.construct_stake_phone}</Text>
+              </View>
             </View>
-          </View>
-          <View className="itemBar">
-          <View>
-            <Text>建桩地址：</Text>
-            <Text>{order.construct_stake_address}</Text>
-          </View>
+            <View className="itemBar">
+              <View>
+                <Text>建桩地址：</Text>
+                <Text>{order.construct_stake_address}</Text>
+              </View>
+            </View>
           </View>
       </View>
     })
@@ -164,14 +209,11 @@ class Order extends Component {
           onScroll={this.onScroll}
         >
           {orders}
+          {noMore
+            ? <View className="nomoreBlock"></View>
+            : <Text></Text>
+          }
         </ScrollView>
-        {noMore
-          ? <Text>无更多数据</Text>
-          : <Text></Text>
-        }
-        {/* <View className="orderList">
-          {orders}
-        </View> */}
       </View>
     )
   }

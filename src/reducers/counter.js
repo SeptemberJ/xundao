@@ -1,10 +1,11 @@
-import { ADD, MINUS, UPDATEUSERINFO } from '../constants/counter'
+import { ADD, MINUS, UPDATEUSERINFO, CHANGETAB} from '../constants/counter'
 
 const INITIAL_STATE = {
   num: 0,
   openid: '',
   session_key: '',
-  userid: ''
+  userid: '',
+  tabIdx: 0
 }
 
 export default function counter (state = INITIAL_STATE, action) {
@@ -25,6 +26,11 @@ export default function counter (state = INITIAL_STATE, action) {
           openid: action.openid,
           session_key: action.session_key,
           userid: action.userid
+        }
+      case CHANGETAB:
+        return {
+          ...state,
+          tabIdx: action.tabIdx
         }
      default:
        return state

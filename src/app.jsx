@@ -19,9 +19,12 @@ class App extends Component {
 
   config = {
     pages: [
-      'pages/index/index',
+      'pages/loading/index',
+      'pages/survey/index',
+      'pages/install/index',
       'pages/image/index',
-      'pages/order/index'
+      'pages/order/index',
+      'pages/detail/index'
     ],
     window: {
       // navigationStyle: 'custom',
