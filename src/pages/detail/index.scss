@@ -79,4 +79,12 @@
       }
     }
   }
+  .evaluate{
+    width: calc(100% - 90px);
+    padding: 0px 25px 20px 25px;
+    #evaluate_qrcode{
+      width: 100%;
+      margin-top: 20px;
+    }
+  }
 }

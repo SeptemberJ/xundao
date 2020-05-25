@@ -1,20 +1,20 @@
 import {
-  ADD,
-  MINUS,
+  // ADD,
+  // MINUS,
   UPDATEUSERINFO,
   CHANGETAB
 } from '../constants/counter'
 
-export const add = () => {
-  return {
-    type: ADD
-  }
-}
-export const minus = () => {
-  return {
-    type: MINUS
-  }
-}
+// export const add = () => {
+//   return {
+//     type: ADD
+//   }
+// }
+// export const minus = () => {
+//   return {
+//     type: MINUS
+//   }
+// }
 export const updateUserInfo = (openid, session_key, userid) => {
   return {
     type: UPDATEUSERINFO,

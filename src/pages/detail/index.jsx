@@ -1,6 +1,7 @@
 import Taro, { Component } from '@tarojs/taro'
 import { View, Text, Image } from '@tarojs/components'
 import { connect } from '@tarojs/redux'
+import QR from 'wxmp-qrcode'
 import { updateUserInfo } from '../../actions/counter'
 import send from '../../service/api'
 import './index.scss'
@@ -25,13 +26,16 @@ class Detail extends Component {
       id: '',
       orderDeatil: {
         surveyList: []
-      }
+      },
+      canvasId: 'evaluate_qrcode',
+      QRdata: 'http://118.25.129.9:8087/a/evaluate.html?id=123'
     }
   }
   componentWillMount () {
     this.setState({
       id: this.$router.params.id
     })
+    // QR.draw('http://baidu.com', 'myCanvas')
   }
   
   componentDidMount () {
@@ -61,6 +65,9 @@ class Detail extends Component {
           this.setState({
             orderDeatil: tmpInfo
           })
+          if (tmpInfo.evaluate_status == 0) {
+            QR.draw('http://118.25.129.9:8087/a/evaluate.html?id=' + id, 'evaluate_qrcode')
+          }
           break
         default:
           Taro.showToast({
@@ -156,6 +163,12 @@ class Detail extends Component {
           <Text>{ orderDeatil.install_note }</Text>
             {/* <AtTextarea style='background:#fff;width:calc(100% - 40px);padding:20rpx 20rpx 0 20rpx;' disabled maxLength={200} height={300} value={orderDeatil.install_note}/> */}
           </View>
+        </View>
+        <View className="evaluate">
+          {
+            orderDeatil.evaluate_status == 0 && <Text>扫描下方二维码对师傅进行评价</Text>
+          }
+          <canvas id="evaluate_qrcode" canvas-id="evaluate_qrcode"></canvas>
         </View>
       </View>
     )

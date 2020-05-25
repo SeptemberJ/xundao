@@ -108,7 +108,7 @@ export default class SubmitKC extends Component {
               if (e.confirm) {
                 Taro.openSetting({
                   success (e) {
-                    console.log(e)
+                    // console.log(e)
                   }
                 })
               }
@@ -126,7 +126,6 @@ export default class SubmitKC extends Component {
     let urls = this.state.files.map(item => {
       return item.url
     })
-    console.log(urls)
     Taro.previewImage({
       current: file.url,
       urls: urls
