@@ -65,7 +65,7 @@ class Detail extends Component {
           this.setState({
             orderDeatil: tmpInfo
           })
-          if (tmpInfo.evaluate_status == 0) {
+          if (tmpInfo.evaluate_status == 0 && tmpInfo.fstatus == 4) {
             QR.draw('http://118.25.129.9:8087/a/evaluate.html?id=' + id, 'evaluate_qrcode')
           }
           break
@@ -166,7 +166,7 @@ class Detail extends Component {
         </View>
         <View className="evaluate">
           {
-            orderDeatil.evaluate_status == 0 && <Text>扫描下方二维码对师傅进行评价</Text>
+            orderDeatil.evaluate_status == 0 && orderDeatil.fstatus == 4 && <Text>扫描下方二维码对师傅进行评价</Text>
           }
           <canvas id="evaluate_qrcode" canvas-id="evaluate_qrcode"></canvas>
         </View>
