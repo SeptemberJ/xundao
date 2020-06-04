@@ -1,7 +1,7 @@
 import Taro, { Component } from '@tarojs/taro'
 import { View, Text } from '@tarojs/components'
 import { connect } from '@tarojs/redux'
-import { AtImagePicker, AtButton, AtTextarea } from 'taro-ui'
+import { AtImagePicker, AtButton, AtTextarea, AtRadio, AtInput } from 'taro-ui'
 import './index.scss'
 import { changeTab } from '../../actions/counter'
 import send from '../../service/api'
@@ -40,7 +40,11 @@ export default class SubmitAZ extends Component {
       wholeFiles: [], // 完整图片list占位
       timeStamp: [], // 图片命名时间戳list占位
       SNCode: '',
-      note: ''
+      note: '',
+      isbz: '',
+      cable: '',
+      pipe: '',
+      fmeter: ''
     }
   }
   componentWillMount () {
@@ -144,9 +148,41 @@ export default class SubmitAZ extends Component {
       })
       return false
     }
-    if (!this.state.SNCode) {
+    // if (!this.state.SNCode) {
+    //   Taro.showToast({
+    //     title: '请先扫SN码',
+    //     icon: 'none',
+    //     duration: 1500
+    //   })
+    //   return false
+    // }
+    if (this.state.isbz == '') {
       Taro.showToast({
-        title: '请先扫SN码',
+        title: '请先选择是否报桩',
+        icon: 'none',
+        duration: 1500
+      })
+      return false
+    }
+    if (this.state.cable == '') {
+      Taro.showToast({
+        title: '请先选择电缆',
+        icon: 'none',
+        duration: 1500
+      })
+      return false
+    }
+    if (this.state.pipe == '') {
+      Taro.showToast({
+        title: '请先选择管材',
+        icon: 'none',
+        duration: 1500
+      })
+      return false
+    }
+    if (!this.state.fmeter) {
+      Taro.showToast({
+        title: '请先输入米数',
         icon: 'none',
         duration: 1500
       })
@@ -154,6 +190,16 @@ export default class SubmitAZ extends Component {
     }
     // 校验通过
     let fcontent = []
+    let installInfo = {
+      id: this.state.id,
+      installNote: this.state.note,
+      sn: this.state.SNCode,
+      isbz: this.state.isbz == "null" ? null : this.state.isbz,
+      cable: this.state.cable,
+      pipe: this.state.pipe,
+      fmeter: this.state.fmeter,
+      fcontent: []
+    }
     this.setState({
       loading: true
     })
@@ -166,7 +212,8 @@ export default class SubmitAZ extends Component {
         })
       }
     })
-    send.post('cos/uploadInstall', {id: this.state.id, installNote: this.state.note, sn: this.state.SNCode, fcontent: JSON.stringify(fcontent)}).then((res) => {
+    installInfo.fcontent = JSON.stringify(fcontent)
+    send.post('cos/uploadInstall', {install: JSON.stringify(installInfo)}).then((res) => {
       switch (res.data.respCode) {
         case '0':
           Taro.showToast({
@@ -199,6 +246,28 @@ export default class SubmitAZ extends Component {
   changeNote = (note) => {
     this.setState({
       note
+    })
+  }
+
+  handleChange_isbz (value) {
+    this.setState({
+      isbz: value
+    })
+  }
+  handleChange_cable (value) {
+    this.setState({
+      cable: value
+    })
+  }
+  handleChange_pipe (value) {
+    this.setState({
+      pipe: value
+    })
+  }
+
+  handleChange_fmeter (value) {
+    this.setState({
+      fmeter: value
     })
   }
 
@@ -244,6 +313,50 @@ export default class SubmitAZ extends Component {
         <View className="SNCode">
           <Text>SN码：{ this.state.SNCode }</Text>
           <AtButton type='primary' size="small" onClick={this.scanCode}>点击扫码</AtButton>
+        </View>
+        <View className="contentBar">
+          <Text className="columnTit">是否报桩</Text>
+          <AtRadio
+            options={[
+              { label: '是', value: '1'},
+              { label: '否', value: 'null' }
+            ]}
+            value={this.state.isbz}
+            onClick={this.handleChange_isbz.bind(this)}
+          />
+        </View>
+        <View className="contentBar">
+          <Text className="columnTit">电缆</Text>
+          <AtRadio
+            options={[
+              { label: 'YJV 3*6', value: '0'},
+              { label: 'YJV 3*4', value: '1' }
+            ]}
+            value={this.state.cable}
+            onClick={this.handleChange_cable.bind(this)}
+          />
+        </View>
+        <View className="contentBar">
+          <Text className="columnTit">管材</Text>
+          <AtRadio
+            options={[
+              { label: 'YJV 3*6', value: '0'},
+              { label: 'YJV 3*4', value: '1' }
+            ]}
+            value={this.state.pipe}
+            onClick={this.handleChange_pipe.bind(this)}
+          />
+        </View>
+        <View className="SNCode">
+          <AtInput style="text-align:right;"
+            name='fmeter'
+            title='米数：'
+            confirmType="完成"
+            type='digit'
+            placeholder='请输入米数'
+            value={this.state.fmeter}
+            onChange={this.handleChange_fmeter.bind(this)}
+          />
         </View>
         <View className="note">
           <AtTextarea style='background:#fff;width:calc(100% - 40px);padding:20rpx 20rpx 0 20rpx;' maxLength={200} height={300} autoHeight placeholder='请输入安装备注' value={this.state.note} onChange={e => this.changeNote(e)}/>

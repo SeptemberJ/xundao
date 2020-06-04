@@ -1,5 +1,5 @@
 .Image{
-  width: 100%;
+  width: 100vw;
   min-height: 100vh;
   display: flex;
   flex-direction: column;
@@ -26,9 +26,39 @@
     align-items: center;
     justify-content: space-between;
   }
+  .SNCode Text{
+    padding-left: 32px;
+  }
+  .SNCode at-input{
+    width: calc(100% - 20px);
+    text-align: right;
+  }
+  .contentBar {
+    width: calc(100% - 20px);
+    padding: 0 10px;
+    background-color: #ffffff;
+    margin-top: 30px;
+  }
+  .columnTit{
+    padding: 12px 0;
+    display: block;
+  }
+  .columnTit::before{
+    content: ' ';
+    display: inline-block;
+    width: 6px;
+    height: 25px;
+    position: relative;
+    top: 0;
+    background: #6190e8;
+    margin-right: 10px;
+  }
   .note{
     width: 100%;
     padding: 20px;
     margin-top: 30px;
   }
+}
+.at-radio__option-wrap {
+  padding: 12px 32px 12px 0;
 }

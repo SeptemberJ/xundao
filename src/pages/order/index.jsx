@@ -1,6 +1,6 @@
 import Taro, { Component } from '@tarojs/taro'
 import { View, Text, Image, ScrollView } from '@tarojs/components'
-import { AtTabBar, AtButton }  from 'taro-ui'
+import { AtTabBar, AtButton, AtCurtain, AtTextarea, AtRadio, AtModal }  from 'taro-ui'
 import { connect } from '@tarojs/redux'
 import { changeTab } from '../../actions/counter'
 import send from '../../service/api'
@@ -45,8 +45,13 @@ class Order extends Component {
       pullText: '上拉加载更多',
       start_p: {},
       scrollY:true,
-      dargState: 0 //刷新状态 0不做操作 1刷新 -1加载更多
-      }
+      dargState: 0, //刷新状态 0不做操作 1刷新 -1加载更多
+      curOrder: {},
+      curOrderIdx: '',
+      isOpened: false,
+      fnote: '',
+      fdegree: ''
+    }
   }
 
   // componentDidShow () {
@@ -271,24 +276,134 @@ class Order extends Component {
     this.getOrderList(curPage, this.state.currentTabIdx + 1)
   }
 
+  suspend = (order, idx) =>{
+    this.setState({
+      isOpened: true,
+      curOrder: order,
+      curOrderIdx: idx
+    })
+  }
+  
+  changeNote = (value) => {
+    this.setState({
+      fnote: value
+    })
+  }
+
+  handleChange_fdegree = (value) => {
+    this.setState({
+      fdegree: value
+    })
+  }
+
+  onClose = () => {
+    this.setState({
+      isOpened: false,
+      fnote: '',
+      fdegree: ''
+    })
+  }
+  updateFstatus = (curOrderIdx, status) => {
+    let tmp = [...this.state.orderList]
+    tmp[curOrderIdx].fstatus = status
+    this.setState({
+      orderList: tmp
+    })
+    this.onClose()
+  }
+  restore = (order, idx) => {
+    send.post('order/restore', {orderid: order.id}).then((res) => {
+      switch (res.data.respCode) {
+        case '0':
+          Taro.showToast({
+            title: '恢复成功',
+            icon: 'success',
+            duration: 1500
+          }).then(
+            // 修改该订单的fstatus
+            this.updateFstatus (idx, this.state.currentTabIdx + 1)
+          )
+          break
+        default:
+          Taro.showToast({
+            title: '恢复失败',
+            icon: 'none',
+            duration: 1500
+          }).then(
+            this.setState({
+              loading: false
+            })
+          )
+      }
+    })
+  }
+  submit = () => {
+    if (this.state.fdegree == '') {
+      Taro.showToast({
+        title: '请先选择暂停原因',
+        icon: 'none',
+        duration: 1500
+      })
+      return false
+    }
+    let suspendInfo = {
+      orderid: this.state.curOrder.id,
+      fdegree: this.state.fdegree,
+      fnote: this.state.fnote,
+    }
+    send.post('order/suspend', {suspend: JSON.stringify(suspendInfo)}).then((res) => {
+      switch (res.data.respCode) {
+        case '0':
+          Taro.showToast({
+            title: '暂停成功',
+            icon: 'success',
+            duration: 1500
+          }).then(
+            // 修改该订单的fstatus
+            this.updateFstatus (this.state.curOrderIdx, 'C')
+          )
+          break
+        default:
+          Taro.showToast({
+            title: '暂停失败',
+            icon: 'none',
+            duration: 1500
+          }).then(
+            this.setState({
+              loading: false
+            })
+          )
+      }
+    })
+  }
+
   render () {
     let dargStyle = this.state.dargStyle;
     let downDragStyle = this.state.downDragStyle;
     let upDragStyle = this.state.upDragStyle;
+    let currentTabIdx = this.state.currentTabIdx
     const { orderList } = this.state
-    const orders = orderList.map((order) => {
+    const orders = orderList.map((order, idx) => {
       return <View key={order.id} className="orderItem">
           <View className="itemBar">
-            <Image className="leftIcon"  src={order.fstatus == '1' ? kanchaIcon : (order.fstatus == '2' ? anzhuang : (order.fstatus == '3' ? shenhe : (wancheng)))} />
-            {
-              order.fstatus == 1 && <AtButton type='secondary' size='small' onClick={this.toUpload.bind(this, order.fstatus, order.workno, order.id)}>提交勘察</AtButton>
-            }
-            {
-              order.fstatus == 2 && <AtButton type='primary' size='small' onClick={this.toUpload.bind(this, order.fstatus, order.workno, order.id)}>安装提交</AtButton>
-            }
-            {
-              order.fstatus == 4 && order.evaluate_status == 0 && <Image className="rightIcon" src={finished}/>
-            }
+            <Image className="leftIcon"  src={currentTabIdx == '0' ? kanchaIcon : (currentTabIdx == '1' ? anzhuang : (currentTabIdx == '2' ? shenhe : (wancheng)))} />
+            <View style="width:120px;display:flex;justify-content:flex-end;">
+              {
+                (order.fstatus != 'C' && (currentTabIdx == 0 || currentTabIdx == 1)) && <AtButton  className="stopBt" size='small' onClick={this.suspend.bind(this, order, idx)}>暂停</AtButton>
+              }
+              {
+                order.fstatus == 'C' && <AtButton  className="restoreBt" size='small' onClick={this.restore.bind(this, order, idx)}>恢复</AtButton>
+              }
+              {
+                (order.fstatus != 'C' && currentTabIdx == 0) && <AtButton className="marginL" type='secondary' size='small' onClick={this.toUpload.bind(this, order.fstatus, order.workno, order.id)}>提交勘察</AtButton>
+              }
+              {
+                (order.fstatus != 'C' && currentTabIdx == 1) && <AtButton className="marginL" type='primary' size='small' onClick={this.toUpload.bind(this, order.fstatus, order.workno, order.id)}>安装提交</AtButton>
+              }
+              {
+                (currentTabIdx == 3 && order.evaluate_status == 0) && <Image className="rightIcon" src={finished}/>
+              }
+            </View>
           </View>
           <View onClick={this.toDetail.bind(this, order.id)}>
             <View className="itemBar">
@@ -370,7 +485,54 @@ class Order extends Component {
               <AtActivityIndicator></AtActivityIndicator>
               <Text className='downText'>{this.state.pullText}</Text>
           </View>
-      </View>
+        </View>
+        <AtModal
+        isOpened={this.state.isOpened}
+        closeOnClickOverlay={false}
+        >
+          <AtModalContent>
+            <View className="contentBar">
+              <Text className="columnTit">请选择原因</Text>
+              <AtRadio
+                options={[
+                  { label: '客户原因', value: '1'},
+                  { label: '时间不符', value: '2' }
+                ]}
+                value={this.state.fdegree}
+                onClick={this.handleChange_fdegree.bind(this)}
+              />
+            </View>
+            <View className="note">
+              <Text className="columnTit">暂停备注</Text>
+              <AtTextarea style='background:#fff;width:calc(100% - 40px);padding:20rpx 20rpx 0 20rpx;' maxLength={150} height={250} autoHeight placeholder='' value={this.state.fnote} onChange={e => this.changeNote(e)}/>
+            </View>
+          </AtModalContent>
+          <View className="footerBts">
+            <View className="modalBt" onClick={this.onClose.bind(this)}>取消</View>
+            <View  className="modalBt" onClick={this.submit.bind(this)}>提交</View>
+          </View>
+        </AtModal>
+        {/* <AtCurtain
+          isOpened={this.state.isOpened}
+          onClose={this.onClose.bind(this)}
+        >
+          <View style="width:calc(100% - 20px);padding:10px;background: #ffffff;margin:0 auto;">
+            <View className="contentBar">
+              <Text className="columnTit">请选择原因</Text>
+              <AtRadio
+                options={[
+                  { label: '客户原因', value: '1'},
+                  { label: '时间不符', value: '2' }
+                ]}
+                value={this.state.fdegree}
+                onClick={this.handleChange_fdegree.bind(this)}
+              />
+            </View>
+            <View className="note">
+              <AtTextarea style='background:#fff;width:calc(100% - 40px);padding:20rpx 20rpx 0 20rpx;' maxLength={200} height={300} autoHeight placeholder='请输入暂停备注' value={this.state.fnote} onChange={e => this.changeNote(e)}/>
+            </View>
+          </View>
+        </AtCurtain> */}
         {/* <ScrollView
           className='orderList'
           scrollY
