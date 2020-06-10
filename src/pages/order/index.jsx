@@ -1,6 +1,6 @@
 import Taro, { Component } from '@tarojs/taro'
 import { View, Text, Image, ScrollView } from '@tarojs/components'
-import { AtTabBar, AtButton, AtCurtain, AtTextarea, AtRadio, AtModal }  from 'taro-ui'
+import { AtTabBar, AtButton, AtCurtain, AtTextarea, AtRadio, AtModal, AtFloatLayout, AtList, AtListItem }  from 'taro-ui'
 import { connect } from '@tarojs/redux'
 import { changeTab } from '../../actions/counter'
 import send from '../../service/api'
@@ -49,8 +49,12 @@ class Order extends Component {
       curOrder: {},
       curOrderIdx: '',
       isOpened: false,
+      isOpenedCarType: false,
+      carTypeList: [],
       fnote: '',
-      fdegree: ''
+      fdegree: '',
+      isShowMaterial: false,
+      carTypeInfo: {detail: {cable: '', pipe: ''}}
     }
   }
 
@@ -119,7 +123,7 @@ class Order extends Component {
     }
   }
 
-  toUpload = (fstatus, workno, id) => {
+  toUpload = (fstatus, workno, id, cartype) => {
     // e.stopPropagation()
     // 勘察
     if (fstatus == 1) {
@@ -130,7 +134,7 @@ class Order extends Component {
     // 安装
     if (fstatus == 2) {
       Taro.navigateTo({
-        url: '/pages/install/index?workno=' + workno + '&id=' + id
+        url: '/pages/install/index?workno=' + workno + '&id=' + id + '&cartype=' + cartype
       })
     }
   }
@@ -311,6 +315,41 @@ class Order extends Component {
     })
     this.onClose()
   }
+  handleCloseCarType = () => {
+    this.setState({
+      isOpenedCarType: false
+    })
+  }
+  showMaterial = (carType) => {
+    this.setState({
+      isShowMaterial: true,
+      carTypeInfo: carType
+    })
+  }
+  handleConfirmCarType  = () => {
+    this.setState({
+      isShowMaterial: false
+    })
+  }
+  getCarTypeList = (cartype, e) => {
+    e.stopPropagation()
+    send.post('order/cartype', {ftype: cartype}).then((res) => {
+      switch (res.data.respCode) {
+        case '0':
+          this.setState({
+            isOpenedCarType: true,
+            carTypeList: res.data.data
+          })
+          break
+        default:
+          Taro.showToast({
+            title: '车型型号获取失败',
+            icon: 'none',
+            duration: 1500
+          })
+      }
+    })
+  }
   restore = (order, idx) => {
     send.post('order/restore', {orderid: order.id}).then((res) => {
       switch (res.data.respCode) {
@@ -395,10 +434,10 @@ class Order extends Component {
                 order.fstatus == 'C' && <AtButton  className="restoreBt" size='small' onClick={this.restore.bind(this, order, idx)}>恢复</AtButton>
               }
               {
-                (order.fstatus != 'C' && currentTabIdx == 0) && <AtButton className="marginL" type='secondary' size='small' onClick={this.toUpload.bind(this, order.fstatus, order.workno, order.id)}>提交勘察</AtButton>
+                (order.fstatus != 'C' && currentTabIdx == 0) && <AtButton className="marginL" type='secondary' size='small' onClick={this.toUpload.bind(this, order.fstatus, order.workno, order.id, order.cartype)}>提交勘察</AtButton>
               }
               {
-                (order.fstatus != 'C' && currentTabIdx == 1) && <AtButton className="marginL" type='primary' size='small' onClick={this.toUpload.bind(this, order.fstatus, order.workno, order.id)}>安装提交</AtButton>
+                (order.fstatus != 'C' && currentTabIdx == 1) && <AtButton className="marginL" type='primary' size='small' onClick={this.toUpload.bind(this, order.fstatus, order.workno, order.id, order.cartype)}>安装提交</AtButton>
               }
               {
                 (currentTabIdx == 3 && order.evaluate_status == 0) && <Image className="rightIcon" src={finished}/>
@@ -443,6 +482,45 @@ class Order extends Component {
                 <Text>{order.construct_stake_address}</Text>
               </View>
             </View>
+            <View className="itemBar" style="justify-content: flex-start;">
+              <Text>车型：</Text>
+              <Text>{order.cartype}</Text>
+              {
+                (currentTabIdx == 0 || currentTabIdx == 1  || currentTabIdx == 'C') && <View style="float:right;" onClick={this.getCarTypeList.bind(this, order.cartype)}>
+                  <AtButton size='small' className="carType">查看</AtButton>
+                </View>
+              }
+            </View>
+            { 
+              (currentTabIdx == 2 || currentTabIdx == 3) && <View className="itemBar"><View>
+              <Text>是否报桩：</Text>
+              <Text>{order.isbz}</Text>
+            </View></View>
+            }
+            {
+              (currentTabIdx == 2 || currentTabIdx == 3) && <View className="itemBar">
+              <View>
+                <Text>电缆：</Text>
+                <Text>{order.cable}</Text>
+              </View>
+            </View>
+            }
+            {
+              (currentTabIdx == 2 || currentTabIdx == 3) && <View className="itemBar">
+              <View>
+                <Text>管材：</Text>
+                <Text>{order.pipe}</Text>
+              </View>
+            </View>
+            }
+            {
+              (currentTabIdx == 2 || currentTabIdx == 3) && <View className="itemBar">
+              <View>
+                <Text>米数：</Text>
+                <Text>{order.fmeter}</Text>
+              </View>
+            </View>
+            }
           </View>
       </View>
     })
@@ -469,7 +547,6 @@ class Order extends Component {
               <AtActivityIndicator></AtActivityIndicator>
               <Text className='downText'>{this.state.downText}</Text>
           </View>
-          {/* onScrollToLower={this.ScrollToLower} */}
           <ScrollView
               style={dargStyle}
               onTouchMove={this.touchmove}
@@ -486,6 +563,22 @@ class Order extends Component {
               <Text className='downText'>{this.state.pullText}</Text>
           </View>
         </View>
+        <AtFloatLayout isOpened={this.state.isOpenedCarType} title="点击查看材料" onClose={this.handleCloseCarType.bind(this)}>
+          {
+            this.state.carTypeList.map((carType) => {
+              return <View className="carTypeItem" key={order.fname} onClick={this.showMaterial.bind(this, carType)}>
+                { carType.fname }
+              </View>
+            })
+          }
+        </AtFloatLayout>
+        <AtModal
+          isOpened={this.state.isShowMaterial}
+          title='材料信息'
+          confirmText='确认'
+          onConfirm={ this.handleConfirmCarType }
+          content={'电缆：' + this.state.carTypeInfo.detail.cable + '\n\r' + '管材：' + this.state.carTypeInfo.detail.pipe}
+        />
         <AtModal
         isOpened={this.state.isOpened}
         closeOnClickOverlay={false}
@@ -512,42 +605,6 @@ class Order extends Component {
             <View  className="modalBt" onClick={this.submit.bind(this)}>提交</View>
           </View>
         </AtModal>
-        {/* <AtCurtain
-          isOpened={this.state.isOpened}
-          onClose={this.onClose.bind(this)}
-        >
-          <View style="width:calc(100% - 20px);padding:10px;background: #ffffff;margin:0 auto;">
-            <View className="contentBar">
-              <Text className="columnTit">请选择原因</Text>
-              <AtRadio
-                options={[
-                  { label: '客户原因', value: '1'},
-                  { label: '时间不符', value: '2' }
-                ]}
-                value={this.state.fdegree}
-                onClick={this.handleChange_fdegree.bind(this)}
-              />
-            </View>
-            <View className="note">
-              <AtTextarea style='background:#fff;width:calc(100% - 40px);padding:20rpx 20rpx 0 20rpx;' maxLength={200} height={300} autoHeight placeholder='请输入暂停备注' value={this.state.fnote} onChange={e => this.changeNote(e)}/>
-            </View>
-          </View>
-        </AtCurtain> */}
-        {/* <ScrollView
-          className='orderList'
-          scrollY
-          scrollWithAnimation
-          scrollTop={scrollTop}
-          lowerThreshold={Threshold}
-          onScrollToLower={this.onScrollToLower}
-          onScroll={this.onScroll}
-        >
-          {orders}
-          {noMore
-            ? <View className="nomoreBlock"></View>
-            : <Text></Text>
-          }
-        </ScrollView> */}
       </View>
     )
   }

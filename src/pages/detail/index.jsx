@@ -132,14 +132,86 @@ class Detail extends Component {
             </View>
           </View>
           <View className="itemBar">
+            <View>
+              <Text>建桩地址：</Text>
+              <Text>{orderDeatil.construct_stake_address}</Text>
+            </View>
+          </View>
+          {
+            (orderDeatil.fstatus == 3 || orderDeatil.fstatus == 4) && <View className="itemBar">
+            <View>
+              <Text>型号：</Text>
+              <Text>{orderDeatil.fnumber}</Text>
+            </View>
+          </View>
+          }
+          {
+            (orderDeatil.fstatus == 3 || orderDeatil.fstatus == 4) && <View className="itemBar">
+            <View>
+              <Text>是否纯安装：</Text>
+              <Text>{orderDeatil.isinstall}</Text>
+            </View>
+          </View>
+          }
+          {
+            (orderDeatil.fstatus == 3 || orderDeatil.fstatus == 4) && <View className="itemBar">
           <View>
-            <Text>建桩地址：</Text>
-            <Text>{orderDeatil.construct_stake_address}</Text>
+            <Text>SN码：</Text>
+            <Text>{orderDeatil.sn}</Text>
           </View>
         </View>
+          }
+          {
+            (orderDeatil.fstatus == 3 || orderDeatil.fstatus == 4) && <View className="itemBar">
+            <View>
+              <Text>立柱：</Text>
+              <Text>{orderDeatil.post}</Text>
+            </View>
+          </View>
+          }
+          {
+            (orderDeatil.fstatus == 3 || orderDeatil.fstatus == 4) && <View className="itemBar">
+            <View>
+              <Text>漏保：</Text>
+              <Text>{orderDeatil.leakpro}</Text>
+            </View>
+          </View>
+          }
+          {
+            (orderDeatil.fstatus == 3 || orderDeatil.fstatus == 4) && <View className="itemBar">
+            <View>
+              <Text>是否报桩：</Text>
+              <Text>{orderDeatil.isbz}</Text>
+            </View>
+          </View>
+          }
+          {
+            (orderDeatil.fstatus == 3 || orderDeatil.fstatus == 4) && <View className="itemBar">
+            <View>
+              <Text>电缆：</Text>
+              <Text>{orderDeatil.cable}</Text>
+            </View>
+          </View>
+          }
+          {
+            (orderDeatil.fstatus == 3 || orderDeatil.fstatus == 4) && <View className="itemBar">
+            <View>
+              <Text>管材：</Text>
+              <Text>{orderDeatil.pipe}</Text>
+            </View>
+          </View>
+          }
+          {
+            (orderDeatil.fstatus == 3 || orderDeatil.fstatus == 4) && <View className="itemBar">
+            <View>
+              <Text>米数：</Text>
+              <Text>{orderDeatil.fmeter}</Text>
+            </View>
+          </View>
+          }
         </View>
         <View className="submitInfo">
-          <Text>勘察图片：</Text>
+          <Text style="margin-top:10px;display:inline-block;">勘察图片：</Text>
           <View className="imgList">
             { surveyImgList }
           </View>
@@ -148,15 +220,9 @@ class Detail extends Component {
             <Text>{ orderDeatil.survey_note }</Text>
             {/* <AtTextarea style='background:#fff;width:calc(100% - 40px);padding:20rpx 20rpx 0 20rpx;' disabled maxLength={200} height={300} value={orderDeatil.survey_note}/> */}
           </View>
-          <Text>安装图片：</Text>
+          <Text style="margin-top:10px;display:inline-block;">安装图片：</Text>
           <View className="imgList">
           { installImgList }
-          </View>
-          <View className="itemBar">
-            <View>
-              <Text>SN码：</Text>
-              <Text>{orderDeatil.sn}</Text>
-            </View>
           </View>
           <Text>安装备注：</Text>
           <View className="note">

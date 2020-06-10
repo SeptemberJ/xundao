@@ -7,10 +7,7 @@ import { changeTab } from '../../actions/counter'
 import send from '../../service/api'
 
 var COS = require('cos-wx-sdk-v5')
-var cos = new COS({
-  SecretId: 'AKIDQdcMwIWBF5TcWCk3IWXO3UihRvKVf8tR',
-  SecretKey: 'ThfOuKWTDhvt89uPekbCXhgT0A7pHXYK',
-});
+
 // cos.getService(function (err, data) {
 //   console.log('getService---')
 //   console.log(data && data.Buckets);
@@ -71,7 +68,7 @@ export default class SubmitKC extends Component {
         timeStamp: oldTimeStamp
       })
       cos.postObject({
-        Bucket: 'qpy1992-1257359561',
+        Bucket: 'xundao-1302369589',
         Region: 'ap-shanghai',
         Key: this.state.workno + '/survey/' + curTimeStamp + '_' + oldWholeFiles.length + '.png',
         FilePath: (files[files.length - 1]).file.path,

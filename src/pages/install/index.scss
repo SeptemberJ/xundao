@@ -27,11 +27,39 @@
     justify-content: space-between;
   }
   .SNCode Text{
-    padding-left: 32px;
+    // padding-left: 32px;
   }
   .SNCode at-input{
     width: calc(100% - 20px);
     text-align: right;
+  }
+  .SNCode .at-input{
+    margin-left: 0;
+  }
+  .carType{
+    width: calc(100% - 20px);
+    padding: 20px 10px;
+    background-color: #ffffff;
+    margin-top: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .carType Text{
+    width: 150px;
+  }
+  .carType picker{
+    text-align: right;
+    padding-right: 10px;
+  }
+  .pureInstall{
+    width: calc(100% - 20px);
+    padding: 20px 10px;
+    background-color: #ffffff;
+    margin-top: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
   }
   .contentBar {
     width: calc(100% - 20px);

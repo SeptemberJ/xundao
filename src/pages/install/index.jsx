@@ -1,15 +1,12 @@
 import Taro, { Component } from '@tarojs/taro'
-import { View, Text } from '@tarojs/components'
+import { View, Text, Picker } from '@tarojs/components'
 import { connect } from '@tarojs/redux'
-import { AtImagePicker, AtButton, AtTextarea, AtRadio, AtInput } from 'taro-ui'
+import { AtImagePicker, AtButton, AtTextarea, AtRadio, AtInput, AtModal } from 'taro-ui'
 import './index.scss'
 import { changeTab } from '../../actions/counter'
 import send from '../../service/api'
 var COS = require('cos-wx-sdk-v5')
-var cos = new COS({
-  SecretId: 'AKIDQdcMwIWBF5TcWCk3IWXO3UihRvKVf8tR',
-  SecretKey: 'ThfOuKWTDhvt89uPekbCXhgT0A7pHXYK',
-});
+
 // cos.getService(function (err, data) {
 //   console.log('getService---')
 //   console.log(data && data.Buckets);
@@ -33,6 +30,19 @@ export default class SubmitAZ extends Component {
     this.state = {
       id: '',
       workno: '',
+      isOpened: false,
+      cartype: '',
+      carTypeList: [],
+      selectorChecked: '请选择',
+      carTypeInfo: {detail: {cable: '', pipe: ''}},
+      pureInstall: '',
+      fnumber: '', // 型号
+      selectorPost: '', // 立柱fname
+      selectorLeakpro: '', // 漏保fname
+      post: '', // 立柱fnumber
+      leakpro: '', // 漏保fnumber
+      postList: [],
+      leakList: [],
       latitude: '',
       longitude: '',
       loading: false,
@@ -50,8 +60,10 @@ export default class SubmitAZ extends Component {
   componentWillMount () {
     this.setState({
       id: this.$router.params.id,
-      workno: this.$router.params.workno
+      workno: this.$router.params.workno,
+      cartype: this.$router.params.cartype
     })
+    this.getCarTypeList(this.$router.params.cartype)
   }
   componentDidShow () {
     // 检查定位
@@ -77,7 +89,7 @@ export default class SubmitAZ extends Component {
       })
       // 上传图片到COS
       cos.postObject({
-        Bucket: 'qpy1992-1257359561',
+        Bucket: 'xundao-1302369589',
         Region: 'ap-shanghai',
         Key: this.state.workno + '/install/' + curTimeStamp + '_' + oldWholeFiles.length + '.png',
         FilePath: (files[files.length - 1]).file.path,
@@ -148,9 +160,33 @@ export default class SubmitAZ extends Component {
       })
       return false
     }
+    if (this.state.selectorChecked == '请选择') {
+      Taro.showToast({
+        title: '请先选择型号',
+        icon: 'none',
+        duration: 1500
+      })
+      return false
+    }
     // if (!this.state.SNCode) {
     //   Taro.showToast({
     //     title: '请先扫SN码',
+    //     icon: 'none',
+    //     duration: 1500
+    //   })
+    //   return false
+    // }
+    // if (this.state.post == '') {
+    //   Taro.showToast({
+    //     title: '请先选择立柱',
+    //     icon: 'none',
+    //     duration: 1500
+    //   })
+    //   return false
+    // }
+    // if (this.state.leakpro == '') {
+    //   Taro.showToast({
+    //     title: '请先选择漏保',
     //     icon: 'none',
     //     duration: 1500
     //   })
@@ -198,6 +234,10 @@ export default class SubmitAZ extends Component {
       cable: this.state.cable,
       pipe: this.state.pipe,
       fmeter: this.state.fmeter,
+      fnumber: this.state.fnumber,
+      post: this.state.post,
+      leakpro: this.state.leakpro,
+      isinstall: this.pureInstall,
       fcontent: []
     }
     this.setState({
@@ -271,6 +311,43 @@ export default class SubmitAZ extends Component {
     })
   }
 
+  onCarTypeChange = e => {
+    const selector = this.state.carTypeList[e.detail.value]
+    this.setState({
+      selectorChecked: selector.fname,
+      carTypeInfo: selector,
+      pureInstall: selector.detail.isinstall,
+      fnumber: selector.fnumber,
+      postList: selector.postList,
+      leakList: selector.leakList,
+      selectorPost: '请选择',
+      selectorLeakpro: '请选择',
+      isOpened: true
+    })
+  }
+
+  onPostChange = e => {
+    const selector = this.state.postList[e.detail.value]
+    this.setState({
+      selectorPost: selector.fname,
+      post: selector.fnumber
+    })
+  }
+
+  onLeakChange = e => {
+    const selector = this.state.leakList[e.detail.value]
+    this.setState({
+      selectorLeakpro: selector.fname,
+      leakpro: selector.fnumber
+    })
+  }
+  
+  handleConfirmCarType = () => {
+    this.setState({
+      isOpened: false
+    })
+  }
+
   scanCode = () => {
     Taro.scanCode({
       onlyFromCamera: true,
@@ -298,6 +375,24 @@ export default class SubmitAZ extends Component {
     })
   }
 
+  getCarTypeList = (cartype) => {
+    send.post('order/cartype', {ftype: cartype}).then((res) => {
+      switch (res.data.respCode) {
+        case '0':
+          this.setState({
+            carTypeList: res.data.data
+          })
+          break
+        default:
+          Taro.showToast({
+            title: '车型型号获取失败',
+            icon: 'none',
+            duration: 1500
+          })
+      }
+    })
+  }
+
   render () {
     return (
       <View className='Image'>
@@ -310,9 +405,34 @@ export default class SubmitAZ extends Component {
             onImageClick={this.onImageClick}
           />
         </View>
-        <View className="SNCode">
+        <View className="carType">
+          <Text>型号：</Text>
+          <Picker mode='selector' range={this.state.carTypeList} rangeKey="fname" onChange={this.onCarTypeChange}>
+            { this.state.selectorChecked }
+          </Picker>
+        </View>
+        <View className="pureInstall">
+          <Text>是否纯安装：</Text>
+          <Text>{ this.state.pureInstall }</Text>
+        </View>
+
+        {
+          this.state.pureInstall == '否' && <View className="SNCode">
           <Text>SN码：{ this.state.SNCode }</Text>
           <AtButton type='primary' size="small" onClick={this.scanCode}>点击扫码</AtButton>
+        </View>
+        }
+        <View className="carType">
+          <Text>立柱：</Text>
+          <Picker mode='selector' range={this.state.postList} rangeKey="fname" onChange={this.onPostChange}>
+            { this.state.selectorPost }
+          </Picker>
+        </View>
+        <View className="carType">
+          <Text>漏保：</Text>
+          <Picker mode='selector' range={this.state.leakList} rangeKey="fname" onChange={this.onLeakChange}>
+            { this.state.selectorLeakpro }
+          </Picker>
         </View>
         <View className="contentBar">
           <Text className="columnTit">是否报桩</Text>
@@ -340,8 +460,8 @@ export default class SubmitAZ extends Component {
           <Text className="columnTit">管材</Text>
           <AtRadio
             options={[
-              { label: 'YJV 3*6', value: '0'},
-              { label: 'YJV 3*4', value: '1' }
+              { label: 'JDG 25', value: '0'},
+              { label: 'PVC 25', value: '1' }
             ]}
             value={this.state.pipe}
             onClick={this.handleChange_pipe.bind(this)}
@@ -364,6 +484,13 @@ export default class SubmitAZ extends Component {
         <View style="width:90%;margin-top:40px;">
           <AtButton loading={this.state.loading} type='primary' onClick={this.submit}>提交</AtButton>
         </View>
+        <AtModal
+          isOpened={this.state.isOpened}
+          title='材料信息'
+          confirmText='确认'
+          onConfirm={ this.handleConfirmCarType }
+          content={'电缆：' + this.state.carTypeInfo.detail.cable + '\n\r' + '管材：' + this.state.carTypeInfo.detail.pipe}
+        />
       </View>
     )
   }
