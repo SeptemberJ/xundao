@@ -10,6 +10,7 @@ import anzhuang from '../../images/anzhuang.png'
 import shenhe from '../../images/shenhe.png'
 import wancheng from '../../images/wancheng.png'
 import finished from '../../images/finished.png'
+import shouji from '../../images/shouji.png'
 
 @connect(({ counter }) => ({
   counter
@@ -331,6 +332,13 @@ class Order extends Component {
       isShowMaterial: false
     })
   }
+  makeCall  = (phone, e) => {
+    e.stopPropagation()
+    Taro.makePhoneCall({
+      phoneNumber: phone //仅为示例，并非真实的电话号码
+    })
+  }
+
   getCarTypeList = (cartype, e) => {
     e.stopPropagation()
     send.post('order/cartype', {ftype: cartype}).then((res) => {
@@ -474,6 +482,7 @@ class Order extends Component {
               <View>
                 <Text>建桩联系电话：</Text>
                 <Text>{order.construct_stake_phone}</Text>
+                <Image className="makeCallIcon" onClick={this.makeCall.bind(this, order.construct_stake_phone)} src={shouji}/>
               </View>
             </View>
             <View className="itemBar">

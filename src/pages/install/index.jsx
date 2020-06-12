@@ -7,10 +7,6 @@ import { changeTab } from '../../actions/counter'
 import send from '../../service/api'
 var COS = require('cos-wx-sdk-v5')
 
-// cos.getService(function (err, data) {
-//   console.log('getService---')
-//   console.log(data && data.Buckets);
-// });
 
 @connect(({ counter }) => ({
   counter
@@ -168,14 +164,15 @@ export default class SubmitAZ extends Component {
       })
       return false
     }
-    // if (!this.state.SNCode) {
-    //   Taro.showToast({
-    //     title: '请先扫SN码',
-    //     icon: 'none',
-    //     duration: 1500
-    //   })
-    //   return false
-    // }
+    console.log(this.state.pureInstall, this.state.SNCode)
+    if (this.state.pureInstall == '否' && !this.state.SNCode) {
+      Taro.showToast({
+        title: '请先扫SN码',
+        icon: 'none',
+        duration: 1500
+      })
+      return false
+    }
     // if (this.state.post == '') {
     //   Taro.showToast({
     //     title: '请先选择立柱',
@@ -237,7 +234,7 @@ export default class SubmitAZ extends Component {
       fnumber: this.state.fnumber,
       post: this.state.post,
       leakpro: this.state.leakpro,
-      isinstall: this.pureInstall,
+      isinstall: this.state.pureInstall,
       fcontent: []
     }
     this.setState({
@@ -353,8 +350,20 @@ export default class SubmitAZ extends Component {
       onlyFromCamera: true,
       scanType: ['barCode', 'qrCode'],
       success: (res) => {
-        this.setState({
-          SNCode: res.result
+        console.log('scan--', res)
+        let SCODE = res.result
+        send.post('order/sn', {sn: SCODE}).then((res) => {
+          if (res.data.respCode == '-1') {
+            Taro.showToast({
+              title: res.data.message,
+              icon: 'none',
+              duration: 1500
+            })
+          } else {
+            this.setState({
+              SNCode: SCODE
+            })
+          }
         })
       }
     })

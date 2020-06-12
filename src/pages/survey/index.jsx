@@ -8,10 +8,6 @@ import send from '../../service/api'
 
 var COS = require('cos-wx-sdk-v5')
 
-// cos.getService(function (err, data) {
-//   console.log('getService---')
-//   console.log(data && data.Buckets);
-// });
 
 @connect(({ counter }) => ({
   counter
