@@ -138,6 +138,14 @@ class Detail extends Component {
             </View>
           </View>
           {
+            orderDeatil.appdate && <View className="itemBar">
+              <View>
+                <Text>预约时间：</Text>
+                <Text>{orderDeatil.appdate}</Text>
+              </View>
+            </View>
+          }
+          {
             (orderDeatil.fstatus == 3 || orderDeatil.fstatus == 4) && <View className="itemBar">
             <View>
               <Text>型号：</Text>
@@ -177,14 +185,14 @@ class Detail extends Component {
             </View>
           </View>
           }
-          {
+          {/* {
             (orderDeatil.fstatus == 3 || orderDeatil.fstatus == 4) && <View className="itemBar">
             <View>
               <Text>是否报桩：</Text>
               <Text>{orderDeatil.isbz}</Text>
             </View>
           </View>
-          }
+          } */}
           {
             (orderDeatil.fstatus == 3 || orderDeatil.fstatus == 4) && <View className="itemBar">
             <View>

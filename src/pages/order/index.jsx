@@ -1,12 +1,14 @@
 import Taro, { Component } from '@tarojs/taro'
-import { View, Text, Image, ScrollView } from '@tarojs/components'
+import { View, Text, Image, ScrollView, Picker } from '@tarojs/components'
 import { AtTabBar, AtButton, AtCurtain, AtTextarea, AtRadio, AtModal, AtFloatLayout, AtList, AtListItem }  from 'taro-ui'
 import { connect } from '@tarojs/redux'
 import { changeTab } from '../../actions/counter'
+import {formatTime} from '../../utils/index'
 import send from '../../service/api'
 import './index.scss'
 import kanchaIcon from '../../images/kancha.png'
 import anzhuang from '../../images/anzhuang.png'
+import baozhuang from '../../images/baozhuang.png'
 import shenhe from '../../images/shenhe.png'
 import wancheng from '../../images/wancheng.png'
 import finished from '../../images/finished.png'
@@ -54,8 +56,14 @@ class Order extends Component {
       carTypeList: [],
       fnote: '',
       fdegree: '',
+      suspendOptions: [],
       isShowMaterial: false,
-      carTypeInfo: {detail: {cable: '', pipe: ''}}
+      carTypeInfo: {detail: {cable: '', pipe: ''}},
+      isOpenedBook: false,
+      appdate: '请选择',
+      appTime: '请选择',
+      isOpenedBZ: false,
+      loading: false
     }
   }
 
@@ -76,6 +84,7 @@ class Order extends Component {
       fail:  (err) => {
       }
     })
+    this.getSuspendOptions()
   }
 
   getOrderList = (curPage, fstatus, reflash) => {
@@ -138,6 +147,56 @@ class Order extends Component {
         url: '/pages/install/index?workno=' + workno + '&id=' + id + '&cartype=' + cartype
       })
     }
+  }
+
+  toBz = (order, idx) => {
+    this.setState({
+      curOrderIdx: idx,
+      curOrder: order,
+      isOpenedBZ: true
+    })
+  }
+
+  updateBZ = (curOrderIdx) => {
+    let tmp = [...this.state.orderList]
+    tmp[curOrderIdx].fstatus = 2
+    this.setState({
+      orderList: tmp,
+      isOpenedBZ: false
+    })
+  }
+
+  handleConfirmBZ = () => {
+    send.post('cos/bz', {id: this.state.curOrder.id}).then((res) => {
+      switch (res.data.respCode) {
+        case '0':
+          Taro.showToast({
+            title: '确认报装成功',
+            icon: 'success',
+            duration: 1500
+          }).then(
+            // 更新该订单的fstatus
+            this.updateBZ(this.state.curOrderIdx)
+          )
+          break
+        default:
+          Taro.showToast({
+            title: '预确认报装失败',
+            icon: 'none',
+            duration: 1500
+          }).then(
+            this.setState({
+              loading: true
+            })
+          )
+      }
+    })
+  }
+
+  handleCancelBZ = () => {
+    this.setState({
+      isOpenedBZ: false
+    })
   }
 
   toDetail = (id) => {
@@ -321,6 +380,13 @@ class Order extends Component {
       isOpenedCarType: false
     })
   }
+
+  handleCloseBook = () => {
+    this.setState({
+      isOpenedBook: false
+    })
+  }
+  
   showMaterial = (carType) => {
     this.setState({
       isShowMaterial: true,
@@ -336,6 +402,82 @@ class Order extends Component {
     e.stopPropagation()
     Taro.makePhoneCall({
       phoneNumber: phone //仅为示例，并非真实的电话号码
+    })
+  }
+
+  book = (order, idx, e) => {
+    let curDate = formatTime(new Date())
+    e.stopPropagation()
+    this.setState({
+      isOpenedBook: true,
+      curDate: curDate,
+      curOrder: order,
+      curOrderIdx: idx,
+      appdate: order.appdate ? order.appdate.slice(0, 10) : '',
+      appTime: order.appdate ? order.appdate.slice(11, 16) : ''
+    })
+  }
+
+  onDateChange = (e) => {
+    this.setState({
+      appdate: e.detail.value
+    })
+  }
+
+  onTimeChange = (e) => {
+    this.setState({
+      appTime: e.detail.value
+    })
+  }
+   
+  updateAppdate = (curOrderIdx, dateStr) => {
+    let tmp = [...this.state.orderList]
+    tmp[curOrderIdx].appdate = dateStr
+    this.setState({
+      orderList: tmp
+    })
+    this.handleCloseBook()
+    this.setState({
+      loading: false
+    })
+  }
+
+  submitDate = () => {
+    if (this.state.appdate == '请选择' || this.state.appTime == '请选择') {
+      Taro.showToast({
+        title: '请先选择预约的时间',
+        icon: 'none',
+        duration: 1500
+      })
+      return false
+    }
+    this.setState({
+      loading: true
+    })
+    let dateStr = this.state.appdate + ' ' + this.state.appTime + ':00'
+    send.post('order/app', {id: this.state.curOrder.id, appdate: dateStr}).then((res) => {
+      switch (res.data.respCode) {
+        case '0':
+          Taro.showToast({
+            title: '预约成功',
+            icon: 'success',
+            duration: 1500
+          }).then(
+            // 更新该订单的预约时间
+            this.updateAppdate(this.state.curOrderIdx, dateStr)
+          )
+          break
+        default:
+          Taro.showToast({
+            title: '预约失败',
+            icon: 'none',
+            duration: 1500
+          }).then(
+            this.setState({
+              loading: true
+            })
+          )
+      }
     })
   }
 
@@ -358,6 +500,25 @@ class Order extends Component {
       }
     })
   }
+
+  getSuspendOptions = () => {
+    send.post('order/type', {code: 'suspend'}).then((res) => {
+      switch (res.data.respCode) {
+        case '0':
+          this.setState({
+            suspendOptions: res.data.data
+          })
+          break
+        default:
+          Taro.showToast({
+            title: '暂停原因获取失败',
+            icon: 'none',
+            duration: 1500
+          })
+      }
+    })
+  }
+
   restore = (order, idx) => {
     send.post('order/restore', {orderid: order.id}).then((res) => {
       switch (res.data.respCode) {
@@ -377,9 +538,6 @@ class Order extends Component {
             icon: 'none',
             duration: 1500
           }).then(
-            this.setState({
-              loading: false
-            })
           )
       }
     })
@@ -416,9 +574,6 @@ class Order extends Component {
             icon: 'none',
             duration: 1500
           }).then(
-            this.setState({
-              loading: false
-            })
           )
       }
     })
@@ -433,10 +588,10 @@ class Order extends Component {
     const orders = orderList.map((order, idx) => {
       return <View key={order.id} className="orderItem">
           <View className="itemBar">
-            <Image className="leftIcon"  src={currentTabIdx == '0' ? kanchaIcon : (currentTabIdx == '1' ? anzhuang : (currentTabIdx == '2' ? shenhe : (wancheng)))} />
+            <Image className="leftIcon"  src={currentTabIdx == '0' ? kanchaIcon : (currentTabIdx == '1' ? (order.fstatus == 'D' ? baozhuang : anzhuang) : (currentTabIdx == '2' ? shenhe : (wancheng)))} />
             <View style="width:120px;display:flex;justify-content:flex-end;">
               {
-                (order.fstatus != 'C' && (currentTabIdx == 0 || currentTabIdx == 1)) && <AtButton  className="stopBt" size='small' onClick={this.suspend.bind(this, order, idx)}>暂停</AtButton>
+                (order.fstatus != 'C' && order.fstatus != 'D' && (currentTabIdx == 0 || currentTabIdx == 1)) && <AtButton  className="stopBt" size='small' onClick={this.suspend.bind(this, order, idx)}>暂停</AtButton>
               }
               {
                 order.fstatus == 'C' && <AtButton  className="restoreBt" size='small' onClick={this.restore.bind(this, order, idx)}>恢复</AtButton>
@@ -445,7 +600,10 @@ class Order extends Component {
                 (order.fstatus != 'C' && currentTabIdx == 0) && <AtButton className="marginL" type='secondary' size='small' onClick={this.toUpload.bind(this, order.fstatus, order.workno, order.id, order.cartype)}>提交勘察</AtButton>
               }
               {
-                (order.fstatus != 'C' && currentTabIdx == 1) && <AtButton className="marginL" type='primary' size='small' onClick={this.toUpload.bind(this, order.fstatus, order.workno, order.id, order.cartype)}>安装提交</AtButton>
+                (order.fstatus != 'C' && order.fstatus != 'D' && currentTabIdx == 1) && <AtButton className="marginL" type='primary' size='small' onClick={this.toUpload.bind(this, order.fstatus, order.workno, order.id, order.cartype)}>安装提交</AtButton>
+              }
+              {
+                (order.fstatus == 'D' && currentTabIdx == 1) && <AtButton className="marginL bz" size='small' onClick={this.toBz.bind(this, order, idx)}>确认报装</AtButton>
               }
               {
                 (currentTabIdx == 3 && order.evaluate_status == 0) && <Image className="rightIcon" src={finished}/>
@@ -455,7 +613,6 @@ class Order extends Component {
           <View onClick={this.toDetail.bind(this, order.id)}>
             <View className="itemBar">
               <View>
-                {/* <Text>工单号：{this.state.pageNo}</Text> */}
                 <Text>工单号：</Text>
                 <Text>{order.workno}</Text>
               </View>
@@ -478,11 +635,16 @@ class Order extends Component {
                 <Text>{order.construct_stake_contact}</Text>
               </View>
             </View>
-            <View className="itemBar">
+            <View className="itemBar" style="justify-content: flex-start;">
               <View>
                 <Text>建桩联系电话：</Text>
                 <Text>{order.construct_stake_phone}</Text>
                 <Image className="makeCallIcon" onClick={this.makeCall.bind(this, order.construct_stake_phone)} src={shouji}/>
+                {
+                  (currentTabIdx == 0) && <View style="float:right;" onClick={this.book.bind(this, order, idx)}>
+                    <AtButton size='small' className="carType">预约</AtButton>
+                  </View>
+                }
               </View>
             </View>
             <View className="itemBar">
@@ -491,11 +653,19 @@ class Order extends Component {
                 <Text>{order.construct_stake_address}</Text>
               </View>
             </View>
+            {
+              order.appdate && <View className="itemBar">
+                <View>
+                  <Text>预约时间：</Text>
+                  <Text>{order.appdate}</Text>
+                </View>
+              </View>
+            }
             <View className="itemBar" style="justify-content: flex-start;">
               <Text>车型：</Text>
               <Text>{order.cartype}</Text>
               {
-                (currentTabIdx == 0 || currentTabIdx == 1  || currentTabIdx == 'C') && <View style="float:right;" onClick={this.getCarTypeList.bind(this, order.cartype)}>
+                (currentTabIdx == 0 || currentTabIdx == 1) && <View style="float:right;" onClick={this.getCarTypeList.bind(this, order.cartype)}>
                   <AtButton size='small' className="carType">查看</AtButton>
                 </View>
               }
@@ -581,6 +751,32 @@ class Order extends Component {
             })
           }
         </AtFloatLayout>
+        <AtFloatLayout isOpened={this.state.isOpenedBook} title="选择预约时间" onClose={this.handleCloseBook.bind(this)}>
+          {
+            <View>
+              <View className="layoutWorkNo">工单号：{ this.state.curOrder.workno }</View>
+              <View className='page-section' style="margin-top: 20px;">
+                <View>
+                  <Picker mode='date' onChange={this.onDateChange} start={this.state.curDate}>
+                    <AtList>
+                      <AtListItem title='日期' extraText={this.state.appdate} />
+                    </AtList>
+                  </Picker>
+                </View>
+              </View>
+              <View className='page-section'>
+                <View>
+                  <Picker mode='time' onChange={this.onTimeChange}>
+                    <AtList>
+                      <AtListItem title='时间' extraText={this.state.appTime} />
+                    </AtList>
+                  </Picker>
+                </View>
+              </View>
+              <AtButton type='primary' className="dateBt" loading={this.state.loading} disabled={this.state.loading} onClick={this.submitDate.bind(this)}>提交</AtButton>
+            </View>
+          }
+        </AtFloatLayout>
         <AtModal
           isOpened={this.state.isShowMaterial}
           title='材料信息'
@@ -596,10 +792,7 @@ class Order extends Component {
             <View className="contentBar">
               <Text className="columnTit">请选择原因</Text>
               <AtRadio
-                options={[
-                  { label: '客户原因', value: '1'},
-                  { label: '时间不符', value: '2' }
-                ]}
+                options={this.state.suspendOptions}
                 value={this.state.fdegree}
                 onClick={this.handleChange_fdegree.bind(this)}
               />
@@ -614,6 +807,15 @@ class Order extends Component {
             <View  className="modalBt" onClick={this.submit.bind(this)}>提交</View>
           </View>
         </AtModal>
+        <AtModal
+          isOpened={this.state.isOpenedBZ}
+          title='提示'
+          cancelText='取消'
+          confirmText='确认'
+          onCancel={ this.handleCancelBZ }
+          onConfirm={ this.handleConfirmBZ }
+          content='是否确认报装?'
+        />
       </View>
     )
   }

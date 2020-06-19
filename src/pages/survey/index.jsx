@@ -1,9 +1,10 @@
 import Taro, { Component } from '@tarojs/taro'
 import { View, Text, Canvas, Image } from '@tarojs/components'
 import { connect } from '@tarojs/redux'
-import { AtImagePicker, AtButton, AtTextarea } from 'taro-ui'
+import { AtImagePicker, AtButton, AtTextarea, AtRadio } from 'taro-ui'
 import './index.scss'
 import { changeTab } from '../../actions/counter'
+import {formatTime} from '../../utils/index'
 import send from '../../service/api'
 
 var COS = require('cos-wx-sdk-v5')
@@ -30,6 +31,11 @@ export default class SubmitKC extends Component {
       latitude: '',
       longitude: '',
       loading: false,
+      isbz: '',
+      curDate: '',
+      sendbzdate: '请选择',
+      plandate: '请选择',
+      confirmdate: '请选择',
       files: [],
       wholeFiles: [], // 完整图片list占位
       timeStamp: [], // 图片命名时间戳list占位
@@ -38,6 +44,7 @@ export default class SubmitKC extends Component {
   }
   componentWillMount () {
     this.setState({
+      curDate: formatTime(new Date()),
       id: this.$router.params.id,
       workno: this.$router.params.workno
     })
@@ -125,6 +132,37 @@ export default class SubmitKC extends Component {
     })
   }
 
+  handleChange_isbz (value) {
+    this.setState({
+      isbz: value
+    })
+    if (value != 2) {
+      this.setState({
+        sendbzdate: '请选择',
+        plandate: '请选择',
+        confirmdate: '请选择'
+      })
+    }
+  }
+
+  onDateChange_send = (e) => {
+    this.setState({
+      sendbzdate: e.detail.value
+    })
+  }
+
+  onDateChange_plan = (e) => {
+    this.setState({
+      plandate: e.detail.value
+    })
+  }
+
+  onDateChange_confirm = (e) => {
+    this.setState({
+      confirmdate: e.detail.value
+    })
+  }
+
   submit2 = () => {
     // const pages = getCurrentPages(); //获取当前页面js里面的pages里的所有信息。
     // const prevPage = pages[pages.length - 2]; 
@@ -139,6 +177,38 @@ export default class SubmitKC extends Component {
 
   submit = () => {
     // 校验
+    if (this.state.isbz == '') {
+      Taro.showToast({
+        title: '请先选择报装类型',
+        icon: 'none',
+        duration: 1500
+      })
+      return false
+    }
+    if (this.state.isbz == 2 && this.state.sendbzdate == '请选择') {
+      Taro.showToast({
+        title: '请先选择递交报桩资料日期',
+        icon: 'none',
+        duration: 1500
+      })
+      return false
+    }
+    if (this.state.isbz == 2 && this.state.plandate == '请选择') {
+      Taro.showToast({
+        title: '请先选择出具方案日期',
+        icon: 'none',
+        duration: 1500
+      })
+      return false
+    }
+    if (this.state.isbz == 2 && this.state.confirmdate == '请选择') {
+      Taro.showToast({
+        title: '请先选择客户确认方案日期',
+        icon: 'none',
+        duration: 1500
+      })
+      return false
+    }
     if (this.state.files.length == 0) {
       Taro.showToast({
         title: '请先选择要上传的图片',
@@ -161,7 +231,7 @@ export default class SubmitKC extends Component {
         })
       }
     })
-    send.post('cos/uploadSurvey', {id: this.state.id, surveyNote: this.state.note, fcontent: JSON.stringify(fcontent)}).then((res) => {
+    send.post('cos/uploadSurvey',{survey: JSON.stringify({id: this.state.id, surveyNote: this.state.note, isbz: this.state.isbz, sendbzdate: this.state.sendbzdate == '请选择' ? '' : this.state.sendbzdate, plandate: this.state.plandate == '请选择' ? '' : this.state.plandate, confirmdate: this.state.confirmdate== '请选择' ? '' : this.state.confirmdate, plandate: this.state.plandate == '请选择' ? '' : this.state.plandate, fcontent: JSON.stringify(fcontent)})}).then((res) => {
       switch (res.data.respCode) {
         case '0':
           Taro.showToast({
@@ -215,6 +285,42 @@ export default class SubmitKC extends Component {
   render () {
     return (
       <View className='Image'>
+        <View className="contentBar">
+          <Text className="columnTit">是否报装</Text>
+          <AtRadio
+            options={[
+              { label: '无需报装', value: '0' },
+              { label: '客户自报装', value: '1' },
+              { label: '需要报装', value: '2' }
+            ]}
+            value={this.state.isbz}
+            onClick={this.handleChange_isbz.bind(this)}
+          />
+        </View>
+        {
+          this.state.isbz == 2 && <View className="carType">
+          <Text>递交报装资料日期：</Text>
+          <Picker mode='date' onChange={this.onDateChange_send} start={this.state.curDate}>
+            { this.state.sendbzdate }
+          </Picker>
+        </View>
+        }
+        {
+          this.state.isbz == 2 && <View className="carType">
+            <Text>出具方案日期：</Text>
+            <Picker mode='date' onChange={this.onDateChange_plan} start={this.state.curDate}>
+              { this.state.plandate }
+            </Picker>
+          </View>
+        }
+        {
+          this.state.isbz == 2 && <View className="carType">
+            <Text>用户确认方案日期：</Text>
+            <Picker mode='date' onChange={this.onDateChange_confirm} start={this.state.curDate}>
+              { this.state.confirmdate }
+            </Picker>
+          </View>
+        }
         <View className="picList">
           <Text>请选择要上传的图片</Text>
           <AtImagePicker
@@ -228,7 +334,7 @@ export default class SubmitKC extends Component {
           <AtTextarea style='background:#fff;width:calc(100% - 40px);padding:20rpx 20rpx 0 20rpx;' maxLength={200} height={300} autoHeight placeholder='请输入勘察备注' value={this.state.note} onChange={e => this.changeNote(e)}/>
         </View>
         <View style="width:90%;margin-top:40px;">
-          <AtButton loading={this.state.loading} type='primary' onClick={this.submit}>提交</AtButton>
+          <AtButton loading={this.state.loading} disabled={this.state.loading} type='primary' onClick={this.submit}>提交</AtButton>
         </View>
       </View>
     )

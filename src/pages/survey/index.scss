@@ -5,11 +5,49 @@
   flex-direction: column;
   align-items: center;
   background-color: #F3F0F3;
+  .contentBar {
+    width: calc(100% - 20px);
+    padding: 0 10px;
+    background-color: #ffffff;
+    margin-top: 30px;
+  }
+  .columnTit{
+    padding: 12px 0;
+    display: block;
+  }
+  .columnTit::before{
+    content: ' ';
+    display: inline-block;
+    width: 6px;
+    height: 25px;
+    position: relative;
+    top: 0;
+    background: #6190e8;
+    margin-right: 10px;
+  }
+  .carType{
+    width: calc(100% - 40px);
+    padding: 20px 20px;
+    background-color: #ffffff;
+    margin-top: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .carType Text{
+    width: 280px;
+    padding-left: 14px;
+  }
+  .carType picker{
+    text-align: right;
+    padding-right: 10px;
+  }
   .picList{
     width: calc(100% - 40px);
     min-height: 300px;
     background-color: #ffffff;
     padding: 20px;
+    margin-top: 30px;
     Text{
       padding-left: 14px;
       margin-bottom: 20px;

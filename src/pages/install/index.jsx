@@ -164,34 +164,9 @@ export default class SubmitAZ extends Component {
       })
       return false
     }
-    console.log(this.state.pureInstall, this.state.SNCode)
     if (this.state.pureInstall == '否' && !this.state.SNCode) {
       Taro.showToast({
         title: '请先扫SN码',
-        icon: 'none',
-        duration: 1500
-      })
-      return false
-    }
-    // if (this.state.post == '') {
-    //   Taro.showToast({
-    //     title: '请先选择立柱',
-    //     icon: 'none',
-    //     duration: 1500
-    //   })
-    //   return false
-    // }
-    // if (this.state.leakpro == '') {
-    //   Taro.showToast({
-    //     title: '请先选择漏保',
-    //     icon: 'none',
-    //     duration: 1500
-    //   })
-    //   return false
-    // }
-    if (this.state.isbz == '') {
-      Taro.showToast({
-        title: '请先选择是否报桩',
         icon: 'none',
         duration: 1500
       })
@@ -227,7 +202,7 @@ export default class SubmitAZ extends Component {
       id: this.state.id,
       installNote: this.state.note,
       sn: this.state.SNCode,
-      isbz: this.state.isbz == "null" ? null : this.state.isbz,
+      // isbz: this.state.isbz == "null" ? null : this.state.isbz,
       cable: this.state.cable,
       pipe: this.state.pipe,
       fmeter: this.state.fmeter,
@@ -424,13 +399,10 @@ export default class SubmitAZ extends Component {
           <Text>是否纯安装：</Text>
           <Text>{ this.state.pureInstall }</Text>
         </View>
-
-        {
-          this.state.pureInstall == '否' && <View className="SNCode">
+        <View className="SNCode">
           <Text>SN码：{ this.state.SNCode }</Text>
           <AtButton type='primary' size="small" onClick={this.scanCode}>点击扫码</AtButton>
         </View>
-        }
         <View className="carType">
           <Text>立柱：</Text>
           <Picker mode='selector' range={this.state.postList} rangeKey="fname" onChange={this.onPostChange}>
@@ -443,7 +415,7 @@ export default class SubmitAZ extends Component {
             { this.state.selectorLeakpro }
           </Picker>
         </View>
-        <View className="contentBar">
+        {/* <View className="contentBar">
           <Text className="columnTit">是否报桩</Text>
           <AtRadio
             options={[
@@ -453,7 +425,7 @@ export default class SubmitAZ extends Component {
             value={this.state.isbz}
             onClick={this.handleChange_isbz.bind(this)}
           />
-        </View>
+        </View> */}
         <View className="contentBar">
           <Text className="columnTit">电缆</Text>
           <AtRadio
@@ -491,7 +463,7 @@ export default class SubmitAZ extends Component {
           <AtTextarea style='background:#fff;width:calc(100% - 40px);padding:20rpx 20rpx 0 20rpx;' maxLength={200} height={300} autoHeight placeholder='请输入安装备注' value={this.state.note} onChange={e => this.changeNote(e)}/>
         </View>
         <View style="width:90%;margin-top:40px;">
-          <AtButton loading={this.state.loading} type='primary' onClick={this.submit}>提交</AtButton>
+          <AtButton loading={this.state.loading} type='primary' disabled={this.state.loading} onClick={this.submit}>提交</AtButton>
         </View>
         <AtModal
           isOpened={this.state.isOpened}
