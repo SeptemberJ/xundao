@@ -185,30 +185,30 @@ export default class SubmitKC extends Component {
       })
       return false
     }
-    if (this.state.isbz == 2 && this.state.sendbzdate == '请选择') {
-      Taro.showToast({
-        title: '请先选择递交报桩资料日期',
-        icon: 'none',
-        duration: 1500
-      })
-      return false
-    }
-    if (this.state.isbz == 2 && this.state.plandate == '请选择') {
-      Taro.showToast({
-        title: '请先选择出具方案日期',
-        icon: 'none',
-        duration: 1500
-      })
-      return false
-    }
-    if (this.state.isbz == 2 && this.state.confirmdate == '请选择') {
-      Taro.showToast({
-        title: '请先选择客户确认方案日期',
-        icon: 'none',
-        duration: 1500
-      })
-      return false
-    }
+    // if (this.state.isbz == 2 && this.state.sendbzdate == '请选择') {
+    //   Taro.showToast({
+    //     title: '请先选择递交报桩资料日期',
+    //     icon: 'none',
+    //     duration: 1500
+    //   })
+    //   return false
+    // }
+    // if (this.state.isbz == 2 && this.state.plandate == '请选择') {
+    //   Taro.showToast({
+    //     title: '请先选择出具方案日期',
+    //     icon: 'none',
+    //     duration: 1500
+    //   })
+    //   return false
+    // }
+    // if (this.state.isbz == 2 && this.state.confirmdate == '请选择') {
+    //   Taro.showToast({
+    //     title: '请先选择客户确认方案日期',
+    //     icon: 'none',
+    //     duration: 1500
+    //   })
+    //   return false
+    // }
     if (this.state.files.length == 0) {
       Taro.showToast({
         title: '请先选择要上传的图片',
@@ -231,7 +231,7 @@ export default class SubmitKC extends Component {
         })
       }
     })
-    send.post('cos/uploadSurvey',{survey: JSON.stringify({id: this.state.id, surveyNote: this.state.note, isbz: this.state.isbz, sendbzdate: this.state.sendbzdate == '请选择' ? '' : this.state.sendbzdate, plandate: this.state.plandate == '请选择' ? '' : this.state.plandate, confirmdate: this.state.confirmdate== '请选择' ? '' : this.state.confirmdate, plandate: this.state.plandate == '请选择' ? '' : this.state.plandate, fcontent: JSON.stringify(fcontent)})}).then((res) => {
+    send.post('cos/uploadSurvey',{survey: JSON.stringify({id: this.state.id, surveyNote: this.state.note, isbz: this.state.isbz, fcontent: JSON.stringify(fcontent)})}).then((res) => {
       switch (res.data.respCode) {
         case '0':
           Taro.showToast({
@@ -297,7 +297,7 @@ export default class SubmitKC extends Component {
             onClick={this.handleChange_isbz.bind(this)}
           />
         </View>
-        {
+        {/* {
           this.state.isbz == 2 && <View className="carType">
           <Text>递交报装资料日期：</Text>
           <Picker mode='date' onChange={this.onDateChange_send} start={this.state.curDate}>
@@ -320,7 +320,7 @@ export default class SubmitKC extends Component {
               { this.state.confirmdate }
             </Picker>
           </View>
-        }
+        } */}
         <View className="picList">
           <Text>请选择要上传的图片</Text>
           <AtImagePicker

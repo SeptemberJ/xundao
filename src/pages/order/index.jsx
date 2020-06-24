@@ -1,6 +1,6 @@
 import Taro, { Component } from '@tarojs/taro'
 import { View, Text, Image, ScrollView, Picker } from '@tarojs/components'
-import { AtTabBar, AtButton, AtCurtain, AtTextarea, AtRadio, AtModal, AtFloatLayout, AtList, AtListItem }  from 'taro-ui'
+import { AtTabBar, AtButton, AtCurtain, AtTextarea, AtRadio, AtModal, AtFloatLayout, AtList, AtListItem, AtMessage }  from 'taro-ui'
 import { connect } from '@tarojs/redux'
 import { changeTab } from '../../actions/counter'
 import {formatTime} from '../../utils/index'
@@ -63,7 +63,13 @@ class Order extends Component {
       appdate: '请选择',
       appTime: '请选择',
       isOpenedBZ: false,
-      loading: false
+      isOpenedBZSimple: false,
+      loading: false,
+      date1: '',
+      date2: '',
+      date3: '',
+      date4: '',
+      date5: ''
     }
   }
 
@@ -150,24 +156,84 @@ class Order extends Component {
   }
 
   toBz = (order, idx) => {
-    this.setState({
-      curOrderIdx: idx,
-      curOrder: order,
-      isOpenedBZ: true
-    })
+    if (order.isbz == 2) {
+      this.setState({
+        curOrderIdx: idx,
+        curOrder: order,
+        isOpenedBZ: true,
+        date1: order.date1 || '请选择',
+        date2: order.date2 || '请选择',
+        date3: order.date3 || '请选择',
+        date4: order.date4 || '请选择',
+        date5: order.date5 || '请选择'
+      })
+    } else {
+      this.setState({
+        curOrderIdx: idx,
+        curOrder: order,
+        isOpenedBZSimple: true
+      })
+    }
   }
 
   updateBZ = (curOrderIdx) => {
     let tmp = [...this.state.orderList]
-    tmp[curOrderIdx].fstatus = 2
-    this.setState({
-      orderList: tmp,
-      isOpenedBZ: false
-    })
+    if (tmp[curOrderIdx].isbz == 2) {
+      tmp[curOrderIdx].fstatus = this.state.date5 != '请选择' ? 2 : 'D'
+      tmp[curOrderIdx].date1 = this.state.date1
+      tmp[curOrderIdx].date2 = this.state.date2
+      tmp[curOrderIdx].date3 = this.state.date3
+      tmp[curOrderIdx].date4 = this.state.date4
+      tmp[curOrderIdx].date5 = this.state.date5
+      this.setState({
+        orderList: tmp,
+        isOpenedBZ: false
+      })
+    } else {
+      tmp[curOrderIdx].fstatus = 2
+      this.setState({
+        orderList: tmp,
+        isOpenedBZSimple: false
+      })
+    }
   }
 
-  handleConfirmBZ = () => {
-    send.post('cos/bz', {id: this.state.curOrder.id}).then((res) => {
+  submitDateBZ = () => {
+    let data = {}
+    if (this.state.curOrder.isbz == 2) {
+      if (this.state.date1 == '请选择') {
+        Taro.atMessage({
+          'message': '请先选择报装原件收到日期！',
+          'type': 'warning'
+        })
+        return false
+      }
+      if (this.state.date2 == '请选择' && this.state.date3 != '请选择') {
+        Taro.atMessage({
+          'message': '请先选择电力专工勘察日期！',
+          'type': 'warning'
+        })
+        return false
+      }
+      if (this.state.date3 == '请选择' && this.state.date4 != '请选择') {
+        Taro.atMessage({
+          'message': '请先选择出具方案日期！',
+          'type': 'warning'
+        })
+        return false
+      }
+      if (this.state.date4 == '请选择' && this.state.date5 != '请选择') {
+        Taro.atMessage({
+          'message': '请先选择递交报装资料日期！',
+          'type': 'warning'
+        })
+        return false
+      }
+      data = JSON.stringify({ id: this.state.curOrder.id, date1: this.state.date1 == '请选择' ? null : this.state.date1, date2: this.state.date2 == '请选择' ? null : this.state.date2, date3: this.state.date3 == '请选择' ? null : this.state.date3, date4: this.state.date4 == '请选择' ? null : this.state.date4, date5: this.state.date5 == '请选择' ? null : this.state.date5 })
+    } else {
+      data = JSON.stringify({ id: this.state.curOrder.id, date1: null, date2: null, date3: null, date4: null, date5: null })
+    }
+    send.post('cos/bz', {bz: data}).then((res) => {
       switch (res.data.respCode) {
         case '0':
           Taro.showToast({
@@ -175,7 +241,7 @@ class Order extends Component {
             icon: 'success',
             duration: 1500
           }).then(
-            // 更新该订单的fstatus
+            // 更新该订单的fstatus 和五个日期
             this.updateBZ(this.state.curOrderIdx)
           )
           break
@@ -186,7 +252,7 @@ class Order extends Component {
             duration: 1500
           }).then(
             this.setState({
-              loading: true
+              loading: false
             })
           )
       }
@@ -195,7 +261,8 @@ class Order extends Component {
 
   handleCancelBZ = () => {
     this.setState({
-      isOpenedBZ: false
+      isOpenedBZ: false,
+      isOpenedBZSimple: false
     })
   }
 
@@ -413,15 +480,45 @@ class Order extends Component {
       curDate: curDate,
       curOrder: order,
       curOrderIdx: idx,
-      appdate: order.appdate ? order.appdate.slice(0, 10) : '',
-      appTime: order.appdate ? order.appdate.slice(11, 16) : ''
+      appdate: order.appdate ? order.appdate.slice(0, 10) : '请选择',
+      appTime: order.appdate ? order.appdate.slice(11, 16) : '请选择'
     })
   }
 
-  onDateChange = (e) => {
+  onDateChangeBook = (e) => {
     this.setState({
       appdate: e.detail.value
     })
+  }
+
+  onDateChangeBZ = (type, e) => {
+    switch (type) {
+      case 1:
+        this.setState({
+          date1: e.detail.value
+        })
+        break
+      case 2:
+        this.setState({
+          date2: e.detail.value
+        })
+        break
+      case 3:
+        this.setState({
+          date3: e.detail.value
+        })
+        break
+      case 4:
+        this.setState({
+          date4: e.detail.value
+        })
+        break
+      case 5:
+        this.setState({
+          date5: e.detail.value
+        })
+        break
+    }
   }
 
   onTimeChange = (e) => {
@@ -474,7 +571,7 @@ class Order extends Component {
             duration: 1500
           }).then(
             this.setState({
-              loading: true
+              loading: false
             })
           )
       }
@@ -709,6 +806,7 @@ class Order extends Component {
     const { noMore } = this.state
     return (
       <View className='Order'>
+        <AtMessage />
         <View style='width:100%;height:50px;position:fixed;z-index:99;' >
           <AtTabBar style="height: 50px"
             tabList={[
@@ -757,7 +855,7 @@ class Order extends Component {
               <View className="layoutWorkNo">工单号：{ this.state.curOrder.workno }</View>
               <View className='page-section' style="margin-top: 20px;">
                 <View>
-                  <Picker mode='date' onChange={this.onDateChange} start={this.state.curDate}>
+                  <Picker mode='date' onChange={this.onDateChangeBook} start={this.state.curDate}>
                     <AtList>
                       <AtListItem title='日期' extraText={this.state.appdate} />
                     </AtList>
@@ -808,14 +906,51 @@ class Order extends Component {
           </View>
         </AtModal>
         <AtModal
-          isOpened={this.state.isOpenedBZ}
+          isOpened={this.state.isOpenedBZSimple}
           title='提示'
           cancelText='取消'
           confirmText='确认'
           onCancel={ this.handleCancelBZ }
-          onConfirm={ this.handleConfirmBZ }
+          onConfirm={ this.submitDateBZ }
           content='是否确认报装?'
         />
+        <AtFloatLayout isOpened={this.state.isOpenedBZ} title="选择日期" onClose={this.handleCancelBZ.bind(this)}>
+          {
+            <View>
+              {/* <View className="layoutWorkNo">工单号：{ this.state.curOrder.workno }</View> */}
+              <View className='page-section' style="margin-top: 0px;">
+                <View>
+                  <Picker mode='date' onChange={this.onDateChangeBZ.bind(this, 1)}>
+                    <AtList>
+                      <AtListItem title='报装原件收到日期' extraText={this.state.date1} />
+                    </AtList>
+                  </Picker>
+                  <Picker mode='date' onChange={this.onDateChangeBZ.bind(this, 2)}>
+                    <AtList>
+                      <AtListItem title='电力专工勘察日期' extraText={this.state.date2} />
+                    </AtList>
+                  </Picker>
+                  <Picker mode='date' onChange={this.onDateChangeBZ.bind(this, 3)}>
+                    <AtList>
+                      <AtListItem title='出具方案日期' extraText={this.state.date3} />
+                    </AtList>
+                  </Picker>
+                  <Picker mode='date' onChange={this.onDateChangeBZ.bind(this, 4)}>
+                    <AtList>
+                      <AtListItem title='递交报装资料日期' extraText={this.state.date4} />
+                    </AtList>
+                  </Picker>
+                  <Picker mode='date' onChange={this.onDateChangeBZ.bind(this, 5)}>
+                    <AtList>
+                      <AtListItem title='用户确认方案日期' extraText={this.state.date5} />
+                    </AtList>
+                  </Picker>
+                </View>
+              </View>
+              <AtButton type='primary' className="dateBt" loading={this.state.loading} disabled={this.state.loading} onClick={this.submitDateBZ.bind(this)}>提交</AtButton>
+            </View>
+          }
+        </AtFloatLayout>
       </View>
     )
   }

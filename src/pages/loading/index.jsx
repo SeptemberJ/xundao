@@ -5,6 +5,7 @@ import { AtButton } from 'taro-ui'
 import { updateUserInfo } from '../../actions/counter'
 import send from '../../service/api'
 import './index.scss'
+import logo from '../../images/logo.png'
 
 
 @connect(({ counter }) => ({
@@ -117,8 +118,8 @@ class Index extends Component {
         <View className='topBlock'></View>
         <View className='mainBlock'>
           <View className='logoBlock'>
-            <Image src='https://camo.githubusercontent.com/3e1b76e514b895760055987f164ce6c95935a3aa/687474703a2f2f73746f726167652e333630627579696d672e636f6d2f6d74642f686f6d652f6c6f676f2d3278313531333833373932363730372e706e67'/>
-            <Text>循道</Text>
+            <Image src={logo}/>
+            {/* <Text>循道</Text> */}
           </View>
           {this.state.showBt && 
             <View className='Authorization'>
