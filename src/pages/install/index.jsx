@@ -1,7 +1,7 @@
 import Taro, { Component } from '@tarojs/taro'
 import { View, Text, Picker } from '@tarojs/components'
 import { connect } from '@tarojs/redux'
-import { AtImagePicker, AtButton, AtTextarea, AtRadio, AtInput, AtModal } from 'taro-ui'
+import { AtImagePicker, AtButton, AtTextarea, AtRadio, AtInput, AtModal, AtIcon } from 'taro-ui'
 import './index.scss'
 import { changeTab } from '../../actions/counter'
 import send from '../../service/api'
@@ -50,7 +50,9 @@ export default class SubmitAZ extends Component {
       isbz: '',
       cable: '',
       pipe: '',
-      fmeter: ''
+      fmeter: '',
+      overPList: [], // 超标项目list
+      productions: []
     }
   }
   componentWillMount () {
@@ -59,6 +61,7 @@ export default class SubmitAZ extends Component {
       workno: this.$router.params.workno,
       cartype: this.$router.params.cartype
     })
+    this.getOverPList(this.$router.params.id)
     this.getCarTypeList(this.$router.params.cartype)
   }
   componentDidShow () {
@@ -198,6 +201,13 @@ export default class SubmitAZ extends Component {
     }
     // 校验通过
     let fcontent = []
+    let costTmp = this.state.productions.map(item => {
+      return {
+        fmodelcode: item.fmodelcode,
+        fnum: item.fnum + item.unit,
+        fprice: item.fprice
+      }
+    })
     let installInfo = {
       id: this.state.id,
       installNote: this.state.note,
@@ -210,7 +220,8 @@ export default class SubmitAZ extends Component {
       post: this.state.post,
       leakpro: this.state.leakpro,
       isinstall: this.state.pureInstall,
-      fcontent: []
+      fcontent: [],
+      cost: JSON.stringify(costTmp)
     }
     this.setState({
       loading: true
@@ -225,6 +236,7 @@ export default class SubmitAZ extends Component {
       }
     })
     installInfo.fcontent = JSON.stringify(fcontent)
+    console.log(installInfo)
     send.post('cos/uploadInstall', {install: JSON.stringify(installInfo)}).then((res) => {
       switch (res.data.respCode) {
         case '0':
@@ -280,6 +292,32 @@ export default class SubmitAZ extends Component {
   handleChange_fmeter (value) {
     this.setState({
       fmeter: value
+    })
+  }
+
+  handleChange_fnum (idx, value) {
+    const oldProductions = [...this.state.productions]
+    oldProductions[idx].fnum = value
+    this.setState({
+      productions: oldProductions
+    })
+  }
+
+  handleChange_fprice (idx, value) {
+    const oldProductions = [...this.state.productions]
+    oldProductions[idx].fprice = value
+    this.setState({
+      productions: oldProductions
+    })
+  }
+
+  onAddOne = e => {
+    const old = [...this.state.productions]
+    const selector = this.state.overPList[e.detail.value]
+    selector.fnum = 111
+    selector.fprice = 10
+    this.setState({
+      productions: [...old, ...[selector]]
     })
   }
 
@@ -377,7 +415,51 @@ export default class SubmitAZ extends Component {
     })
   }
 
+  getOverPList = (id) => {
+    send.post('order/cost', {id: id}).then((res) => {
+      switch (res.data.respCode) {
+        case '0':
+          this.setState({
+            overPList: res.data.data
+          })
+          break
+        default:
+          Taro.showToast({
+            title: '超标项目获取失败',
+            icon: 'none',
+            duration: 1500
+          })
+      }
+    })
+  }
+
   render () {
+    const productionList = this.state.productions.map((item, idx) => {
+      return <View className="pListTit pLine" key={idx}>
+        <Text>{ item.fmodel }</Text>
+        <Text>{ item.fmax }</Text>
+        <View className="inputBlock">
+          <View>
+            <AtInput
+                name='fnum'
+                confirmType="完成"
+                type='digit'
+                value={item.fnum}
+                onChange={this.handleChange_fnum.bind(this, idx)}
+              />{ item.unit }
+          </View>
+        </View>
+        <View className="inputBlock">
+            <AtInput
+                name='fprice'
+                confirmType="完成"
+                type='digit'
+                value={item.fprice}
+                onChange={this.handleChange_fprice.bind(this, idx)}
+              />{ '元' }
+          </View>
+      </View>
+    })
     return (
       <View className='Image'>
         <View className="picList">
@@ -458,6 +540,21 @@ export default class SubmitAZ extends Component {
             value={this.state.fmeter}
             onChange={this.handleChange_fmeter.bind(this)}
           />
+        </View>
+        <View className="contentBar">
+          <Text className="columnTit">超标项目 </Text>
+          <View className="pListTit" style="background: #F3F0F3;">
+            <Text>规格</Text>
+            <Text>最高价格</Text>
+            <Text>实际用量</Text>
+            <Text>实际收费</Text>
+          </View>
+          { productionList }
+          <View class="plus">
+            <Picker mode='selector' range={this.state.overPList} rangeKey="fmodel" onChange={this.onAddOne}>
+              <AtIcon value='add' size='30' color='#6190e8'></AtIcon>
+            </Picker>
+          </View>
         </View>
         <View className="note">
           <AtTextarea style='background:#fff;width:calc(100% - 40px);padding:20rpx 20rpx 0 20rpx;' maxLength={200} height={300} autoHeight placeholder='请输入安装备注' value={this.state.note} onChange={e => this.changeNote(e)}/>

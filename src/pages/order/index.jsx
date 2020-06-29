@@ -133,7 +133,8 @@ class Order extends Component {
     if (curIdx != this.state.currentTabIdx) {
       this.setState({
         currentTabIdx: curIdx,
-        pageNo: 1
+        pageNo: 1,
+        orderList: []
       })
       this.getOrderList(1, curIdx + 1, true)
     }

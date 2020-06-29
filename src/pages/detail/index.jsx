@@ -98,6 +98,15 @@ class Detail extends Component {
         return <View onClick={this.previewImage.bind(this, orderDeatil.installList, install)} key={install}><Image mode="aspectFit" key={install} src={install}/></View>
       })
     }
+
+    const productionList = orderDeatil.orderSdcost.map((item, idx) => {
+      return <View className="pListTit" key={idx}>
+        <Text>{ item.fmodel }</Text>
+        <Text>{ item.fmax }</Text>
+        <Text>{ item.fnum }</Text>
+        <Text>{ item.fprice }元</Text>
+      </View>
+    })
     return (
       <View className='Detail'>
         <View className="topInfo">
@@ -146,44 +155,45 @@ class Detail extends Component {
             </View>
           }
           {
-            (orderDeatil.fstatus == 3 || orderDeatil.fstatus == 4) && <View className="itemBar">
-            <View>
-              <Text>型号：</Text>
-              <Text>{orderDeatil.fnumber}</Text>
+            // (orderDeatil.fstatus == 3 || orderDeatil.fstatus == 4) && <View className="itemBar">
+            <View className="itemBar">
+              <View>
+                <Text>型号：</Text>
+                <Text>{orderDeatil.fnumber}</Text>
+              </View>
             </View>
-          </View>
           }
           {
-            (orderDeatil.fstatus == 3 || orderDeatil.fstatus == 4) && <View className="itemBar">
-            <View>
-              <Text>是否纯安装：</Text>
-              <Text>{orderDeatil.isinstall}</Text>
+            <View className="itemBar">
+              <View>
+                <Text>是否纯安装：</Text>
+                <Text>{orderDeatil.isinstall}</Text>
+              </View>
             </View>
-          </View>
           }
           {
-            (orderDeatil.fstatus == 3 || orderDeatil.fstatus == 4) && <View className="itemBar">
-          <View>
-            <Text>SN码：</Text>
-            <Text>{orderDeatil.sn}</Text>
-          </View>
-        </View>
+            <View className="itemBar">
+              <View>
+                <Text>SN码：</Text>
+                <Text>{orderDeatil.sn}</Text>
+              </View>
+            </View>
           }
           {
-            (orderDeatil.fstatus == 3 || orderDeatil.fstatus == 4) && <View className="itemBar">
-            <View>
-              <Text>立柱：</Text>
-              <Text>{orderDeatil.post}</Text>
+            <View className="itemBar">
+              <View>
+                <Text>立柱：</Text>
+                <Text>{orderDeatil.post}</Text>
+              </View>
             </View>
-          </View>
           }
           {
-            (orderDeatil.fstatus == 3 || orderDeatil.fstatus == 4) && <View className="itemBar">
-            <View>
-              <Text>漏保：</Text>
-              <Text>{orderDeatil.leakpro}</Text>
+            <View className="itemBar">
+              <View>
+                <Text>漏保：</Text>
+                <Text>{orderDeatil.leakpro}</Text>
+              </View>
             </View>
-          </View>
           }
           {/* {
             (orderDeatil.fstatus == 3 || orderDeatil.fstatus == 4) && <View className="itemBar">
@@ -194,29 +204,42 @@ class Detail extends Component {
           </View>
           } */}
           {
-            (orderDeatil.fstatus == 3 || orderDeatil.fstatus == 4) && <View className="itemBar">
-            <View>
-              <Text>电缆：</Text>
-              <Text>{orderDeatil.cable}</Text>
+            <View className="itemBar">
+              <View>
+                <Text>电缆：</Text>
+                <Text>{orderDeatil.cable}</Text>
+              </View>
             </View>
-          </View>
           }
           {
-            (orderDeatil.fstatus == 3 || orderDeatil.fstatus == 4) && <View className="itemBar">
-            <View>
-              <Text>管材：</Text>
-              <Text>{orderDeatil.pipe}</Text>
+            <View className="itemBar">
+              <View>
+                <Text>管材：</Text>
+                <Text>{orderDeatil.pipe}</Text>
+              </View>
             </View>
-          </View>
           }
           {
-            (orderDeatil.fstatus == 3 || orderDeatil.fstatus == 4) && <View className="itemBar">
+            <View className="itemBar">
+              <View>
+                <Text>米数：</Text>
+                <Text>{orderDeatil.fmeter}</Text>
+              </View>
+            </View>
+          }
+          <View className="itemBar">
             <View>
-              <Text>米数：</Text>
-              <Text>{orderDeatil.fmeter}</Text>
+              <Text>超标项目：</Text>
+              <Text> </Text>
             </View>
           </View>
-          }
+          <View className="pListTit" style="background: #F3F0F3;">
+            <Text>规格</Text>
+            <Text>最高价格</Text>
+            <Text>实际用量</Text>
+            <Text>实际收费</Text>
+          </View>
+          { productionList }
         </View>
         <View className="submitInfo">
           <Text style="margin-top:10px;display:inline-block;">勘察图片：</Text>

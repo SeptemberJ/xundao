@@ -84,7 +84,7 @@
       font-size: 30px;
       position: absolute;
   }
-  .dragUpdata{width: 100%;position: absolute;}
+  .dragUpdata{width: 100%;position: absolute;z-index: 999999;}
   .downText{margin-left: 20px;}
 }
 .Order{
