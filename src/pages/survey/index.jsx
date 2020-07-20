@@ -60,6 +60,7 @@ export default class SubmitKC extends Component {
     let oldWholeFiles = [...this.state.wholeFiles]
     let oldTimeStamp = [...this.state.timeStamp]
     let curTimeStamp = (new Date()).getTime()
+    
     // 添加图片
     if (doType == 'add') {
       let newestFile = files[len - 1]
@@ -70,6 +71,7 @@ export default class SubmitKC extends Component {
         wholeFiles: oldWholeFiles,
         timeStamp: oldTimeStamp
       })
+      
       cos.postObject({
         Bucket: 'xundao-1302369589',
         Region: 'ap-shanghai',

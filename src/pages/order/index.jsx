@@ -56,7 +56,11 @@ class Order extends Component {
       carTypeList: [],
       fnote: '',
       fdegree: '',
+      ftype: '',
+      stopDate: '请选择日期',
+      stopTime: '请选择时间',
       suspendOptions: [],
+      ftypeOptions: [],
       isShowMaterial: false,
       carTypeInfo: {detail: {cable: '', pipe: ''}},
       isOpenedBook: false,
@@ -91,6 +95,7 @@ class Order extends Component {
       }
     })
     this.getSuspendOptions()
+    this.getFtypeOptions()
   }
 
   getOrderList = (curPage, fstatus, reflash) => {
@@ -428,11 +433,20 @@ class Order extends Component {
     })
   }
 
+  handleChange_ftype = (value) => {
+    this.setState({
+      ftype: value
+    })
+  }
+
   onClose = () => {
     this.setState({
       isOpened: false,
       fnote: '',
-      fdegree: ''
+      fdegree: '',
+      ftype: '',
+      stopDate: '请选择日期',
+      stopTime: '请选择时间'
     })
   }
   updateFstatus = (curOrderIdx, status) => {
@@ -492,6 +506,12 @@ class Order extends Component {
     })
   }
 
+  onStopDateChange = (e) => {
+    this.setState({
+      stopDate: e.detail.value
+    })
+  }
+
   onDateChangeBZ = (type, e) => {
     switch (type) {
       case 1:
@@ -527,7 +547,12 @@ class Order extends Component {
       appTime: e.detail.value
     })
   }
-   
+  
+  onStopTimeChange = (e) => {
+    this.setState({
+      stopTime: e.detail.value
+    })
+  }
   updateAppdate = (curOrderIdx, dateStr) => {
     let tmp = [...this.state.orderList]
     tmp[curOrderIdx].appdate = dateStr
@@ -616,6 +641,23 @@ class Order extends Component {
       }
     })
   }
+  getFtypeOptions = () => {
+    send.post('order/type', {code: 'suspend1'}).then((res) => {
+      switch (res.data.respCode) {
+        case '0':
+          this.setState({
+            ftypeOptions: res.data.data
+          })
+          break
+        default:
+          Taro.showToast({
+            title: '暂停原因获取失败',
+            icon: 'none',
+            duration: 1500
+          })
+      }
+    })
+  }
 
   restore = (order, idx) => {
     send.post('order/restore', {orderid: order.id}).then((res) => {
@@ -649,9 +691,27 @@ class Order extends Component {
       })
       return false
     }
+    if (this.state.ftype == '') {
+      Taro.showToast({
+        title: '请先选择暂停类型',
+        icon: 'none',
+        duration: 1500
+      })
+      return false
+    }
+    if (this.state.stopDate == '请选择日期' || this.state.stopTime == '请选择时间') {
+      Taro.showToast({
+        title: '请将日期选择完整',
+        icon: 'none',
+        duration: 1500
+      })
+      return false
+    }
     let suspendInfo = {
       orderid: this.state.curOrder.id,
       fdegree: this.state.fdegree,
+      ftype: this.state.ftype,
+      fendtime: this.state.stopDate + ' ' + this.state.stopTime,
       fnote: this.state.fnote,
     }
     send.post('order/suspend', {suspend: JSON.stringify(suspendInfo)}).then((res) => {
@@ -895,6 +955,23 @@ class Order extends Component {
                 value={this.state.fdegree}
                 onClick={this.handleChange_fdegree.bind(this)}
               />
+            </View>
+            <View className="contentBar">
+              <Text className="columnTit">暂停类型</Text>
+              <AtRadio
+                options={this.state.ftypeOptions}
+                value={this.state.ftype}
+                onClick={this.handleChange_ftype.bind(this)}
+              />
+            </View>
+            <View className="contentBar">
+              <Text className="columnTit">暂停至</Text>
+              <Picker mode='date' onChange={this.onStopDateChange} start={this.state.curDate} style="width:120px;display:inline-block;text-align:right;">
+                {this.state.stopDate}
+              </Picker>
+              <Picker mode='time' onChange={this.onStopTimeChange} style="width:120px;display:inline-block;padding-left: 10px;">
+                {this.state.stopTime}
+              </Picker>
             </View>
             <View className="note">
               <Text className="columnTit">暂停备注</Text>

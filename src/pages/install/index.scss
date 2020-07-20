@@ -126,12 +126,13 @@
     // align-items: center;
   }
   .inputBlock at-input{
-    width: 100px;
+    width: 94%;
     height: 35px;
     line-height: 35px;
     overflow: hidden;
     text-align: right;
     display: inline-block;
+    border-bottom: 1px solid #ccc;
   }
   .inputBlock .at-input{
     margin-left: 0;
@@ -142,6 +143,13 @@
   }
   .inputBlock .at-input__input{
     font-size: 28px;
+    padding-right: 0px;
+  }
+  .inputFee .at-input__input{
+    font-size: 26px;
+    color: #f35957;
+    padding-right: 0px;
+    border-bottom: 1px solid #f35957;
   }
   .note{
     width: 100%;
@@ -151,4 +159,7 @@
 }
 .at-radio__option-wrap {
   padding: 12px 32px 12px 0;
+}
+.TextAlignR{
+  text-align: right;
 }

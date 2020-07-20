@@ -26,9 +26,7 @@ class Detail extends Component {
       id: '',
       orderDeatil: {
         surveyList: []
-      },
-      canvasId: 'evaluate_qrcode',
-      QRdata: 'http://118.25.129.9:8087/a/evaluate.html?id=123'
+      }
     }
   }
   componentWillMount () {
@@ -57,16 +55,28 @@ class Detail extends Component {
           let tmpSurveyList = res.data.data.surveyList.map(item => {
             return item.replace(/[\r\n]/g,"")
           })
-          let tmpInstallImgListt = res.data.data.installList.map(item => {
+          let tmpInstallImgList = res.data.data.installList.map(item => {
+            return item.replace(/[\r\n]/g,"")
+          })
+          let tmpInstallImgList2 = res.data.data.installList2.map(item => {
+            return item.replace(/[\r\n]/g,"")
+          })
+          let tmpInstallImgList3 = res.data.data.installList3.map(item => {
+            return item.replace(/[\r\n]/g,"")
+          })
+          let tmpInstallImgList4 = res.data.data.installList4.map(item => {
             return item.replace(/[\r\n]/g,"")
           })
           tmpInfo.surveyList = tmpSurveyList
-          tmpInfo.installList = tmpInstallImgListt
+          tmpInfo.installList = tmpInstallImgList
+          tmpInfo.installList2 = tmpInstallImgList2
+          tmpInfo.installList3 = tmpInstallImgList3
+          tmpInfo.installList4 = tmpInstallImgList4
           this.setState({
             orderDeatil: tmpInfo
           })
-          if (tmpInfo.evaluate_status == 0 && tmpInfo.fstatus == 4) {
-            QR.draw('http://118.25.129.9:8087/a/evaluate.html?id=' + id, 'evaluate_qrcode')
+          if (tmpInfo.evaluate_status == 0 && (tmpInfo.fstatus == 5 || tmpInfo.fstatus == 6 || tmpInfo.fstatus == 7 || tmpInfo.fstatus == 8)) {
+            QR.draw('https://xundao.shkingdee-soft.com/1/evaluate.html?id=' + id, 'evaluate_qrcode')
           }
           break
         default:
@@ -83,6 +93,9 @@ class Detail extends Component {
     let orderDeatil = this.state.orderDeatil
     let surveyImgList = null
     let installImgList = null
+    let installImgList2 = null
+    let installImgList3 = null
+    let installImgList4 = null
     if (orderDeatil.surveyList && orderDeatil.surveyList.length > 0) {
       // surveyImgList = orderDeatil.surveyList.map((survey, idx) => {
       //   return {
@@ -96,6 +109,21 @@ class Detail extends Component {
     if (orderDeatil.installList && orderDeatil.installList.length > 0) {
       installImgList = orderDeatil.installList.map((install, idx) => {
         return <View onClick={this.previewImage.bind(this, orderDeatil.installList, install)} key={install}><Image mode="aspectFit" key={install} src={install}/></View>
+      })
+    }
+    if (orderDeatil.installList2 && orderDeatil.installList2.length > 0) {
+      installImgList2 = orderDeatil.installList2.map((install, idx) => {
+        return <View onClick={this.previewImage.bind(this, orderDeatil.installList2, install)} key={install}><Image mode="aspectFit" key={install} src={install}/></View>
+      })
+    }
+    if (orderDeatil.installList3 && orderDeatil.installList3.length > 0) {
+      installImgList3 = orderDeatil.installList3.map((install, idx) => {
+        return <View onClick={this.previewImage.bind(this, orderDeatil.installList3, install)} key={install}><Image mode="aspectFit" key={install} src={install}/></View>
+      })
+    }
+    if (orderDeatil.installList4 && orderDeatil.installList4.length > 0) {
+      installImgList4 = orderDeatil.installList4.map((install, idx) => {
+        return <View onClick={this.previewImage.bind(this, orderDeatil.installList4, install)} key={install}><Image mode="aspectFit" key={install} src={install}/></View>
       })
     }
 
@@ -227,7 +255,7 @@ class Detail extends Component {
               </View>
             </View>
           }
-          <View className="itemBar">
+          <View className="itemBar" style="border-bottom: 0;">
             <View>
               <Text>超标项目：</Text>
               <Text> </Text>
@@ -240,6 +268,24 @@ class Detail extends Component {
             <Text>实际收费</Text>
           </View>
           { productionList }
+          <View className="pListTit">
+            <Text style="color: #f35957;">合计</Text>
+            <Text></Text>
+            <Text></Text>
+            <Text style="color: #f35957;">{ orderDeatil.price ? orderDeatil.price + '元' : '' }</Text>
+          </View>
+          <View className="pListTit">
+            <Text style="color: #f35957;">实际费用</Text>
+            <Text></Text>
+            <Text></Text>
+            <Text style="color: #f35957;">{ orderDeatil.price1 ? orderDeatil.price1 + '元' : '' }</Text>
+          </View>
+          <View className="pListTit">
+            <Text style="color: #f35957;">优惠</Text>
+            <Text></Text>
+            <Text></Text>
+            <Text style="color: #f35957;">{ orderDeatil.price2 ? orderDeatil.price2 + '元' : '' }</Text>
+          </View>
         </View>
         <View className="submitInfo">
           <Text style="margin-top:10px;display:inline-block;">勘察图片：</Text>
@@ -251,9 +297,21 @@ class Detail extends Component {
             <Text>{ orderDeatil.survey_note }</Text>
             {/* <AtTextarea style='background:#fff;width:calc(100% - 40px);padding:20rpx 20rpx 0 20rpx;' disabled maxLength={200} height={300} value={orderDeatil.survey_note}/> */}
           </View>
-          <Text style="margin-top:10px;display:inline-block;">安装图片：</Text>
+          <Text style="margin-top:10px;display:inline-block;">电源点图片：</Text>
           <View className="imgList">
-          { installImgList }
+            { installImgList }
+          </View>
+          <Text style="margin-top:10px;display:inline-block;">人桩合影图片：</Text>
+          <View className="imgList">
+            { installImgList2 }
+          </View>
+          <Text style="margin-top:10px;display:inline-block;">桩前5米图片：</Text>
+          <View className="imgList">
+            { installImgList3 }
+          </View>
+          <Text style="margin-top:10px;display:inline-block;">通电测试图片：</Text>
+          <View className="imgList">
+            { installImgList4 }
           </View>
           <Text>安装备注：</Text>
           <View className="note">
@@ -263,7 +321,7 @@ class Detail extends Component {
         </View>
         <View className="evaluate">
           {
-            orderDeatil.evaluate_status == 0 && orderDeatil.fstatus == 4 && <Text>扫描下方二维码对师傅进行评价</Text>
+            (orderDeatil.evaluate_status == 0 && (orderDeatil.fstatus == 5 || orderDeatil.fstatus == 6 || orderDeatil.fstatus == 7 || orderDeatil.fstatus == 8)) && <Text>扫描下方二维码对师傅进行评价</Text>
           }
           <canvas id="evaluate_qrcode" canvas-id="evaluate_qrcode"></canvas>
         </View>
