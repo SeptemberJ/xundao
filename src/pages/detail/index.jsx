@@ -53,25 +53,29 @@ class Detail extends Component {
         case '0':
           let tmpInfo = {... res.data.data}
           let tmpSurveyList = res.data.data.surveyList.map(item => {
-            return item.replace(/[\r\n]/g,"")
+            return item.url.replace(/[\r\n]/g,"")
           })
           let tmpInstallImgList = res.data.data.installList.map(item => {
-            return item.replace(/[\r\n]/g,"")
+            return item.url.replace(/[\r\n]/g,"")
           })
           let tmpInstallImgList2 = res.data.data.installList2.map(item => {
-            return item.replace(/[\r\n]/g,"")
+            return item.url.replace(/[\r\n]/g,"")
           })
           let tmpInstallImgList3 = res.data.data.installList3.map(item => {
-            return item.replace(/[\r\n]/g,"")
+            return item.url.replace(/[\r\n]/g,"")
           })
           let tmpInstallImgList4 = res.data.data.installList4.map(item => {
-            return item.replace(/[\r\n]/g,"")
+            return item.url.replace(/[\r\n]/g,"")
+          })
+          let tmpInstallImgList5 = res.data.data.installList5.map(item => {
+            return item.url.replace(/[\r\n]/g,"")
           })
           tmpInfo.surveyList = tmpSurveyList
           tmpInfo.installList = tmpInstallImgList
           tmpInfo.installList2 = tmpInstallImgList2
           tmpInfo.installList3 = tmpInstallImgList3
           tmpInfo.installList4 = tmpInstallImgList4
+          tmpInfo.installList5 = tmpInstallImgList5
           this.setState({
             orderDeatil: tmpInfo
           })
@@ -96,6 +100,7 @@ class Detail extends Component {
     let installImgList2 = null
     let installImgList3 = null
     let installImgList4 = null
+    let installImgList5 = null
     if (orderDeatil.surveyList && orderDeatil.surveyList.length > 0) {
       // surveyImgList = orderDeatil.surveyList.map((survey, idx) => {
       //   return {
@@ -124,6 +129,11 @@ class Detail extends Component {
     if (orderDeatil.installList4 && orderDeatil.installList4.length > 0) {
       installImgList4 = orderDeatil.installList4.map((install, idx) => {
         return <View onClick={this.previewImage.bind(this, orderDeatil.installList4, install)} key={install}><Image mode="aspectFit" key={install} src={install}/></View>
+      })
+    }
+    if (orderDeatil.installList5 && orderDeatil.installList5.length > 0) {
+      installImgList5 = orderDeatil.installList5.map((install, idx) => {
+        return <View onClick={this.previewImage.bind(this, orderDeatil.installList5, install)} key={install}><Image mode="aspectFit" key={install} src={install}/></View>
       })
     }
 
@@ -272,19 +282,19 @@ class Detail extends Component {
             <Text style="color: #f35957;">合计</Text>
             <Text></Text>
             <Text></Text>
-            <Text style="color: #f35957;">{ orderDeatil.price ? orderDeatil.price + '元' : '' }</Text>
+            <Text style="color: #f35957;">{ orderDeatil.price + '元' }</Text>
           </View>
           <View className="pListTit">
             <Text style="color: #f35957;">实际费用</Text>
             <Text></Text>
             <Text></Text>
-            <Text style="color: #f35957;">{ orderDeatil.price1 ? orderDeatil.price1 + '元' : '' }</Text>
+            <Text style="color: #f35957;">{ orderDeatil.price1 + '元' }</Text>
           </View>
           <View className="pListTit">
             <Text style="color: #f35957;">优惠</Text>
             <Text></Text>
             <Text></Text>
-            <Text style="color: #f35957;">{ orderDeatil.price2 ? orderDeatil.price2 + '元' : '' }</Text>
+            <Text style="color: #f35957;">{ orderDeatil.price2 + '元' }</Text>
           </View>
         </View>
         <View className="submitInfo">
@@ -297,21 +307,25 @@ class Detail extends Component {
             <Text>{ orderDeatil.survey_note }</Text>
             {/* <AtTextarea style='background:#fff;width:calc(100% - 40px);padding:20rpx 20rpx 0 20rpx;' disabled maxLength={200} height={300} value={orderDeatil.survey_note}/> */}
           </View>
-          <Text style="margin-top:10px;display:inline-block;">电源点图片：</Text>
+          <Text style="margin-top:10px;display:inline-block;">条形码照片：</Text>
           <View className="imgList">
             { installImgList }
           </View>
-          <Text style="margin-top:10px;display:inline-block;">人桩合影图片：</Text>
+          <Text style="margin-top:10px;display:inline-block;">电源点照片：</Text>
           <View className="imgList">
             { installImgList2 }
           </View>
-          <Text style="margin-top:10px;display:inline-block;">桩前5米图片：</Text>
+          <Text style="margin-top:10px;display:inline-block;">人桩合影照片：</Text>
           <View className="imgList">
             { installImgList3 }
           </View>
-          <Text style="margin-top:10px;display:inline-block;">通电测试图片：</Text>
+          <Text style="margin-top:10px;display:inline-block;">桩前5米照片：</Text>
           <View className="imgList">
             { installImgList4 }
+          </View>
+          <Text style="margin-top:10px;display:inline-block;">其他照片：</Text>
+          <View className="imgList">
+            { installImgList5 }
           </View>
           <Text>安装备注：</Text>
           <View className="note">

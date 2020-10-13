@@ -8,7 +8,10 @@ import {formatTime} from '../../utils/index'
 import send from '../../service/api'
 
 var COS = require('cos-wx-sdk-v5')
-
+var cos = new COS({
+  SecretId: 'AKIDiA5qKXzAG6ubMqH8vIQsjbDZetTmnQhm',
+  SecretKey: 'xf0mHsCcnmNjocZFrCJAg81dyZuy812n',
+})
 
 @connect(({ counter }) => ({
   counter
@@ -49,9 +52,50 @@ export default class SubmitKC extends Component {
       workno: this.$router.params.workno
     })
   }
+  componentDidMount () {
+    this.getOrdeDetail(this.state.id)
+  }
   componentDidShow () {
     // 获取定位
     this.checkAuth()
+  }
+  getOrdeDetail = (id) => {
+    send.post('cos/orderDetail', {id: id}).then((res) => {
+      switch (res.data.respCode) {
+        case '0':
+          let tmpInfo = {... res.data.data}
+          let tmpWholeFiles = []
+          let tmpTimeStamp = []
+          let tmpSurveyList = res.data.data.surveyList.map(item => {
+            let url = item.url.replace(/[\r\n]/g,"")
+            let fileName  = item.fbojectname.split('/')[2]
+            tmpTimeStamp.push(fileName.split('_')[0])
+            tmpWholeFiles.push(url)
+            let obj = {
+              file: {
+                path: url
+              },
+              url: url
+            }
+            return obj
+          })
+          tmpInfo.surveyList = tmpSurveyList
+          this.setState({
+            isbz: tmpInfo.fisbz,
+            files: tmpSurveyList,
+            wholeFiles: tmpWholeFiles,
+            timeStamp: tmpTimeStamp,
+            note: tmpInfo.survey_note
+          })
+          break
+        default:
+          Taro.showToast({
+            title: '订单详情获取失败',
+            icon: 'none',
+            duration: 1500
+          })
+      }
+    })
   }
   onChange = (files, doType, index) => {
     console.log(doType, index, files)
@@ -165,15 +209,47 @@ export default class SubmitKC extends Component {
     })
   }
 
-  submit2 = () => {
-    // const pages = getCurrentPages(); //获取当前页面js里面的pages里的所有信息。
-    // const prevPage = pages[pages.length - 2]; 
-    // prevPage.setData({  // 将我们想要传递的参数在这里直接setData。上个页面就会执行这里的操作。
-    //   currentTabIdx: 1,
-    // })
-    // Taro.navigateBack()
-    Taro.redirectTo({
-      url: '/pages/order/index?tab=' + 1
+  saveTemporary = () => {
+    let fcontent = []
+    this.setState({
+      loading: true
+    })
+    this.state.wholeFiles.map((item, idx) => {
+      if (item) {
+        fcontent.push({
+          fobjectname: this.state.workno + '/survey/' + this.state.timeStamp[idx] + '_' + (idx + 1) + '.png',
+          lng: this.state.longitude,
+          lat: this.state.latitude
+        })
+      }
+    })
+    send.post('cos/uploadSurvey',{survey: JSON.stringify({fstatus: '1', id: this.state.id, surveyNote: this.state.note, isbz: this.state.isbz, fcontent: JSON.stringify(fcontent)})}).then((res) => {
+      switch (res.data.respCode) {
+        case '0':
+          Taro.showToast({
+            title: '暂存成功',
+            icon: 'success',
+            duration: 1500
+          }).then(
+            this.setState({
+              loading: false
+            })
+          )
+          Taro.redirectTo({
+            url: '/pages/order/index?tab=' + 0
+          })
+          break
+        default:
+          Taro.showToast({
+            title: '暂存失败',
+            icon: 'none',
+            duration: 1500
+          }).then(
+            this.setState({
+              loading: false
+            })
+          )
+      }
     })
   }
 
@@ -335,8 +411,9 @@ export default class SubmitKC extends Component {
         <View className="note">
           <AtTextarea style='background:#fff;width:calc(100% - 40px);padding:20rpx 20rpx 0 20rpx;' maxLength={200} height={300} autoHeight placeholder='请输入勘察备注' value={this.state.note} onChange={e => this.changeNote(e)}/>
         </View>
-        <View style="width:90%;margin-top:40px;">
-          <AtButton loading={this.state.loading} disabled={this.state.loading} type='primary' onClick={this.submit}>提交</AtButton>
+        <View className="btBlock">
+          <AtButton className="bt" loading={this.state.loading} disabled={this.state.loading} type='primary' onClick={this.submit}>提交</AtButton>
+          <AtButton className="bt" loading={this.state.loading} disabled={this.state.loading} type='secondary' onClick={this.saveTemporary}>暂存</AtButton>
         </View>
       </View>
     )

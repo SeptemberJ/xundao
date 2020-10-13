@@ -145,7 +145,7 @@ class Order extends Component {
     }
   }
 
-  toUpload = (fstatus, workno, id, cartype) => {
+  toUpload = (fstatus, workno, id, cartype, hosts) => {
     // e.stopPropagation()
     // 勘察
     if (fstatus == 1) {
@@ -156,7 +156,7 @@ class Order extends Component {
     // 安装
     if (fstatus == 2) {
       Taro.navigateTo({
-        url: '/pages/install/index?workno=' + workno + '&id=' + id + '&cartype=' + cartype
+        url: '/pages/install/index?workno=' + workno + '&id=' + id + '&cartype=' + cartype + '&hosts=' + hosts
       })
     }
   }
@@ -758,7 +758,7 @@ class Order extends Component {
                 (order.fstatus != 'C' && currentTabIdx == 0) && <AtButton className="marginL" type='secondary' size='small' onClick={this.toUpload.bind(this, order.fstatus, order.workno, order.id, order.cartype)}>提交勘察</AtButton>
               }
               {
-                (order.fstatus != 'C' && order.fstatus != 'D' && currentTabIdx == 1) && <AtButton className="marginL" type='primary' size='small' onClick={this.toUpload.bind(this, order.fstatus, order.workno, order.id, order.cartype)}>安装提交</AtButton>
+                (order.fstatus != 'C' && order.fstatus != 'D' && currentTabIdx == 1) && <AtButton className="marginL" type='primary' size='small' onClick={this.toUpload.bind(this, order.fstatus, order.workno, order.id, order.cartype, order.hosts)}>安装提交</AtButton>
               }
               {
                 (order.fstatus == 'D' && currentTabIdx == 1) && <AtButton className="marginL bz" size='small' onClick={this.toBz.bind(this, order, idx)}>确认报装</AtButton>

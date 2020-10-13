@@ -7,7 +7,6 @@ import send from '../../service/api'
 import './index.scss'
 import logo from '../../images/logo.png'
 
-
 @connect(({ counter }) => ({
   counter
 }), (dispatch) => ({

@@ -6,7 +6,10 @@ import './index.scss'
 import { changeTab } from '../../actions/counter'
 import send from '../../service/api'
 var COS = require('cos-wx-sdk-v5')
-
+var cos = new COS({
+  SecretId: 'AKIDiA5qKXzAG6ubMqH8vIQsjbDZetTmnQhm',
+  SecretKey: 'xf0mHsCcnmNjocZFrCJAg81dyZuy812n',
+})
 
 @connect(({ counter }) => ({
   counter
@@ -28,9 +31,10 @@ export default class SubmitAZ extends Component {
       workno: '',
       isOpened: false,
       cartype: '',
+      hosts: '',
       carTypeList: [],
       selectorChecked: '请选择',
-      carTypeInfo: {detail: {cable: '', pipe: ''}},
+      // carTypeInfo: {detail: {cable: '', pipe: ''}}, // 弹出的电缆和管材信息
       pureInstall: '',
       fnumber: '', // 型号
       selectorPost: '', // 立柱fname
@@ -42,33 +46,44 @@ export default class SubmitAZ extends Component {
       latitude: '',
       longitude: '',
       loading: false,
-      files: [], // 1、电源点；2、人桩合影、3、桩前5米、4、通电测试
+      files1: [], // 1.条形码；2.电源点、3.人桩合影、4.桩前5米、5.其它
       files2: [],
       files3: [],
       files4: [],
-      wholeFiles: [], // 完整图片list占位
-      timeStamp: [], // 图片命名时间戳list占位
+      files5: [],
+      wholeFiles1: [], // 完整图片list占位
+      wholeFiles2: [],
+      wholeFiles3: [],
+      wholeFiles4: [],
+      wholeFiles5: [],
+      timeStamp1: [], // 图片命名时间戳list占位
+      timeStamp2: [],
+      timeStamp3: [],
+      timeStamp4: [],
+      timeStamp5: [],
       checkSN: 'N', //  Y - 可以为空 N - 不可以为空
       SNCode: '',
       note: '',
       isbz: '',
-      cable: '',
-      pipe: '',
+      cable: '请选择',
+      pipe: '请选择',
       fmeter: '',
       overPList: [], // 超标项目list
       productions: [],
       sum: 0, // 应收
-      total: '' // 实收
+      total: 0 // 实收
     }
   }
   componentWillMount () {
     this.setState({
       id: this.$router.params.id,
       workno: this.$router.params.workno,
-      cartype: this.$router.params.cartype
+      cartype: this.$router.params.cartype,
+      hosts: this.$router.params.hosts
     })
-    this.getCarTypeList(this.$router.params.cartype)
+    this.getCarTypeList(this.$router.params.cartype, this.$router.params.id, this.$router.params.hosts)
     this.checkSNCode(this.$router.params.id)
+    // this.getOrdeDetail(this.$router.params.id)
   }
   componentDidShow () {
     // 检查定位
@@ -89,13 +104,178 @@ export default class SubmitAZ extends Component {
       }
     }
   }
+  getCurFnumber = (item) => {
+    return item.age >= 18;
+  }
+  getOrdeDetail = (id, carTypeList) => {
+    send.post('cos/installDetail', {id: id}).then((res) => {
+      switch (res.data.respCode) {
+        case '0':
+          let tmpInfo = {... res.data.data}
+          let curType = carTypeList.filter((carType) => {
+            return carType.fnumber == tmpInfo.number
+          })
+          let cablePipeList = curType[0].detail.map(item => {
+            item.valueStr = '电缆： ' + item.cable + '\xa0\xa0\xa0|\xa0\xa0\xa0' + '管材： '+ item.pipe
+            return item
+          })
+          // console.log(curType)
+          
+          this.setState({
+            fnumber: tmpInfo.number,
+            pureInstall: tmpInfo.isinstall,
+            SNCode: tmpInfo.sn,
+            cablePipeList: cablePipeList,
+            post: tmpInfo.post,
+            selectorPost: tmpInfo.fpost ? tmpInfo.fpost : '请选择',
+            leakpro: tmpInfo.leakpro,
+            selectorLeakpro: tmpInfo.fleakpro ? tmpInfo.fleakpro : '请选择',
+            cable: tmpInfo.cable ? tmpInfo.cable : '请选择',
+            pipe: tmpInfo.pipe ? tmpInfo.pipe : '请选择',
+            fmeter: tmpInfo.fmeter,
+            sum: tmpInfo.price,
+            total: tmpInfo.price1,
+            note: tmpInfo.install_note
+          })
+          this.setState({
+            selectorChecked: curType.length > 0 ? curType[0].fname : '请选择',
+            // carTypeInfo: {detail: curType[0].detail},
+            postList: curType.length > 0 ? curType[0].postList : [],
+            leakList: curType.length > 0 ? curType[0].leakList : [],
+            // isOpened: true
+          })
+          let tmpWholeFiles1 = []
+          let tmpWholeFiles2 = []
+          let tmpWholeFiles3 = []
+          let tmpWholeFiles4 = []
+          let tmpWholeFiles5 = []
+          let tmpTimeStamp1 = []
+          let tmpTimeStamp2 = []
+          let tmpTimeStamp3 = []
+          let tmpTimeStamp4 = []
+          let tmpTimeStamp5 = []
+          let tmpSurveyList1 = tmpInfo.installList.map(item => {
+            let url = item.url.replace(/[\r\n]/g,"")
+            let fileName  = item.fbojectname.split('/')[2]
+            tmpTimeStamp1.push({
+              dirct: 1,
+              stamp: fileName.split('_')[0]
+            })
+            tmpWholeFiles1.push(url)
+            let obj = {
+              file: {
+                path: url
+              },
+              url: url
+            }
+            return obj
+          })
+          this.setState({
+            files1: tmpSurveyList1,
+            wholeFiles1: tmpWholeFiles1,
+            timeStamp1: tmpTimeStamp1
+          })
+          let tmpSurveyList2 = tmpInfo.installList2.map(item => {
+            let url = item.url.replace(/[\r\n]/g,"")
+            let fileName  = item.fbojectname.split('/')[2]
+            tmpTimeStamp2.push({
+              dirct: 2,
+              stamp: fileName.split('_')[0]
+            })
+            tmpWholeFiles2.push(url)
+            let obj = {
+              file: {
+                path: url
+              },
+              url: url
+            }
+            return obj
+          })
+          this.setState({
+            files2: tmpSurveyList2,
+            wholeFiles2: tmpWholeFiles2,
+            timeStamp2: tmpTimeStamp2
+          })
+          let tmpSurveyList3 = tmpInfo.installList3.map(item => {
+            let url = item.url.replace(/[\r\n]/g,"")
+            let fileName  = item.fbojectname.split('/')[2]
+            tmpTimeStamp3.push({
+              dirct: 3,
+              stamp: fileName.split('_')[0]
+            })
+            tmpWholeFiles3.push(url)
+            let obj = {
+              file: {
+                path: url
+              },
+              url: url
+            }
+            return obj
+          })
+          this.setState({
+            files3: tmpSurveyList3,
+            wholeFiles3: tmpWholeFiles3,
+            timeStamp3: tmpTimeStamp3
+          })
+          let tmpSurveyList4 = tmpInfo.installList4.map(item => {
+            let url = item.url.replace(/[\r\n]/g,"")
+            let fileName  = item.fbojectname.split('/')[2]
+            tmpTimeStamp4.push({
+              dirct: 4,
+              stamp: fileName.split('_')[0]
+            })
+            tmpWholeFiles4.push(url)
+            let obj = {
+              file: {
+                path: url
+              },
+              url: url
+            }
+            return obj
+          })
+          this.setState({
+            files4: tmpSurveyList4,
+            wholeFiles4: tmpWholeFiles4,
+            timeStamp4: tmpTimeStamp4
+          })
+          let tmpSurveyList5 = tmpInfo.installList5.map(item => {
+            let url = item.url.replace(/[\r\n]/g,"")
+            let fileName  = item.fbojectname.split('/')[2]
+            tmpTimeStamp5.push({
+              dirct: 5,
+              stamp: fileName.split('_')[0]
+            })
+            tmpWholeFiles5.push(url)
+            let obj = {
+              file: {
+                path: url
+              },
+              url: url
+            }
+            return obj
+          })
+          this.setState({
+            files5: tmpSurveyList5,
+            wholeFiles5: tmpWholeFiles5,
+            timeStamp5: tmpTimeStamp5
+          })
+          break
+        default:
+          Taro.showToast({
+            title: '订单详情获取失败',
+            icon: 'none',
+            duration: 1500
+          })
+      }
+    })
+  }
   
   onChange = (type, files, doType, index) => {
     console.log(doType, index, files, type)
     let removePathIdx = null
     let len = files.length
-    let oldWholeFiles = [...this.state.wholeFiles]
-    let oldTimeStamp = [...this.state.timeStamp]
+    let oldWholeFiles = [...this.state['wholeFiles' + type]]
+    let oldTimeStamp = [...this.state['timeStamp' + type]]
     let curTimeStamp = (new Date()).getTime()
     // 添加图片
     if (doType == 'add') {
@@ -105,30 +285,37 @@ export default class SubmitAZ extends Component {
       switch (type) {
         case 1:
           this.setState({
-            files: files,
-            wholeFiles: oldWholeFiles,
-            timeStamp: oldTimeStamp
+            files1: files,
+            wholeFiles1: oldWholeFiles,
+            timeStamp1: oldTimeStamp
           })
           break
         case 2:
           this.setState({
             files2: files,
-            wholeFiles: oldWholeFiles,
-            timeStamp: oldTimeStamp
+            wholeFiles2: oldWholeFiles,
+            timeStamp2: oldTimeStamp
           })
           break
         case 3:
           this.setState({
             files3: files,
-            wholeFiles: oldWholeFiles,
-            timeStamp: oldTimeStamp
+            wholeFiles3: oldWholeFiles,
+            timeStamp3: oldTimeStamp
           })
           break
         case 4:
           this.setState({
             files4: files,
-            wholeFiles: oldWholeFiles,
-            timeStamp: oldTimeStamp
+            wholeFiles4: oldWholeFiles,
+            timeStamp4: oldTimeStamp
+          })
+          break
+        case 5:
+          this.setState({
+            files5: files,
+            wholeFiles5: oldWholeFiles,
+            timeStamp5: oldTimeStamp
           })
           break
       }
@@ -147,14 +334,51 @@ export default class SubmitAZ extends Component {
     }
     // 移除图片
     if (doType == 'remove') {
-      removePathIdx = oldWholeFiles.indexOf(this.state.files[index].url)
+      removePathIdx = oldWholeFiles.indexOf(this.state['files' + type][index].url)
       oldWholeFiles.splice(removePathIdx, 1, null)
       oldTimeStamp.splice(removePathIdx, 1, null)
-      this.setState({
-        files: files,
-        wholeFiles: oldWholeFiles,
-        timeStamp: oldTimeStamp
-      })
+      switch (type) {
+        case 1:
+          this.setState({
+            files1: files,
+            wholeFiles1: oldWholeFiles,
+            timeStamp1: oldTimeStamp
+          })
+          break
+        case 2:
+          this.setState({
+            files2: files,
+            wholeFiles2: oldWholeFiles,
+            timeStamp2: oldTimeStamp
+          })
+          break
+        case 3:
+          this.setState({
+            files3: files,
+            wholeFiles3: oldWholeFiles,
+            timeStamp3: oldTimeStamp
+          })
+          break
+        case 4:
+          this.setState({
+            files4: files,
+            wholeFiles4: oldWholeFiles,
+            timeStamp4: oldTimeStamp
+          })
+          break
+        case 5:
+          this.setState({
+            files5: files,
+            wholeFiles5: oldWholeFiles,
+            timeStamp5: oldTimeStamp
+          })
+          break
+      }
+      // this.setState({
+      //   files: files,
+      //   wholeFiles: oldWholeFiles,
+      //   timeStamp: oldTimeStamp
+      // })
     }
   }
 
@@ -189,7 +413,7 @@ export default class SubmitAZ extends Component {
     let Files = []
     switch (type) {
       case 1:
-        Files = this.state.files
+        Files = this.state.files1
         break
       case 2:
         Files = this.state.files2
@@ -199,6 +423,9 @@ export default class SubmitAZ extends Component {
         break
       case 4:
         Files = this.state.files4
+        break
+      case 5:
+        Files = this.state.files5
         break
     }
     let urls = Files.map(item => {
@@ -210,19 +437,157 @@ export default class SubmitAZ extends Component {
     })
   }
 
-  submit = () => {
-    // 校验
-    if (this.state.wholeFiles.length == 0) {
+  saveTemporary = () => {
+    // 什么都没填写时不能暂存
+    if (this.state.files1.length == 0 && this.state.files2.length == 0 && this.state.files3.length == 0 && this.state.files4.length == 0 && this.state.selectorChecked == '请选择' && this.state.selectorPost == '请选择' && this.state.selectorLeakpro == '请选择' && this.state.cable == '请选择' && this.state.pipe == '请选择' && !this.state.fmeter) {
       Taro.showToast({
-        title: '请先选择要上传的图片',
+        title: '没有填写任何内容无法暂存!',
         icon: 'none',
         duration: 1500
       })
       return false
     }
+    // 校验通过
+    let fcontent = []
+    let arrIdx = [1, 2, 3, 4, 5]
+    let costTmp = this.state.productions.map(item => {
+      return {
+        fmodelcode: item.fmodelcode,
+        fnum: item.unit,
+        fprice: item.fprice
+      }
+    })
+    let installInfo = {
+      fstatus: '2',
+      id: this.state.id,
+      installNote: this.state.note,
+      sn: this.state.SNCode,
+      // isbz: this.state.isbz == "null" ? null : this.state.isbz,
+      cable: this.state.cable === '请选择' ? '' : this.state.cable,
+      pipe: this.state.pipe === '请选择' ? '': this.state.pipe ,
+      fmeter: this.state.fmeter,
+      fnumber: this.state.fnumber,
+      post: this.state.selectorPost === '无' ? this.state.post : null,
+      leakpro: this.state.selectorLeakpro === '无' ? this.state.leakpro : null,
+      price: this.state.sum, // 应收
+      price1: this.state.total, // 实收
+      price2: this.state.sum - this.state.total, // 优惠
+      isinstall: this.state.pureInstall,
+      fcontent: [],
+      cost: JSON.stringify(costTmp)
+    }
+    this.setState({
+      loading: true
+    })
+    arrIdx.map(item => {
+      let arrFiles = this.state['wholeFiles' + item ]
+      let arrTimeStamp = this.state['timeStamp' + item ]
+        if (arrFiles.length  > 0) {
+          arrFiles.map((_item, idx) => {
+            if (_item) {
+              fcontent.push({
+                fobjectname: this.state.workno + '/install/' + arrTimeStamp[idx].stamp + '_' + (idx + 1) + '.png',
+                lng: this.state.longitude,
+                lat: this.state.latitude,
+                dirct: arrTimeStamp[idx].dirct
+              })
+            }
+          })
+        }
+    })
+    installInfo.fcontent = JSON.stringify(fcontent)
+    // console.log(fcontent)
+    send.post('cos/uploadInstall', {install: JSON.stringify(installInfo)}).then((res) => {
+      switch (res.data.respCode) {
+        case '0':
+          Taro.showToast({
+            title: '提交成功',
+            icon: 'success',
+            duration: 1500
+          }).then(
+            this.setState({
+              loading: false
+            })
+          )
+          Taro.redirectTo({
+            url: '/pages/order/index?tab=' + 1
+          })
+          break
+        default:
+          Taro.showToast({
+            title: '提交失败',
+            icon: 'none',
+            duration: 1500
+          }).then(
+            this.setState({
+              loading: false
+            })
+          )
+      }
+    })
+  }
+
+  submit = () => {
+    // 校验
+    if (this.state.files1.length == 0) {
+      Taro.showToast({
+        title: '请先选择要上传的条形码照片',
+        icon: 'none',
+        duration: 1500
+      })
+      return false
+    }
+    if (this.state.files2.length == 0) {
+      Taro.showToast({
+        title: '请先选择要上传的电源点照片',
+        icon: 'none',
+        duration: 1500
+      })
+      return false
+    }
+    if (this.state.files3.length == 0) {
+      Taro.showToast({
+        title: '请先选择要上传的人桩合影照片',
+        icon: 'none',
+        duration: 1500
+      })
+      return false
+    }
+    if (this.state.files4.length == 0) {
+      Taro.showToast({
+        title: '请先选择要上传的桩前5米照片',
+        icon: 'none',
+        duration: 1500
+      })
+      return false
+    }
+    // if (this.state.files5.length == 0) {
+    //   Taro.showToast({
+    //     title: '请先选择其他照片',
+    //     icon: 'none',
+    //     duration: 1500
+    //   })
+    //   return false
+    // }
     if (this.state.selectorChecked == '请选择') {
       Taro.showToast({
         title: '请先选择型号',
+        icon: 'none',
+        duration: 1500
+      })
+      return false
+    }
+    if (this.state.selectorPost == '请选择') {
+      Taro.showToast({
+        title: '请先选择立柱',
+        icon: 'none',
+        duration: 1500
+      })
+      return false
+    }
+    if (this.state.selectorLeakpro == '请选择') {
+      Taro.showToast({
+        title: '请先选择漏保',
         icon: 'none',
         duration: 1500
       })
@@ -236,7 +601,7 @@ export default class SubmitAZ extends Component {
       })
       return false
     }
-    if (this.state.cable == '') {
+    if (this.state.cable == '请选择') {
       Taro.showToast({
         title: '请先选择电缆',
         icon: 'none',
@@ -244,7 +609,7 @@ export default class SubmitAZ extends Component {
       })
       return false
     }
-    if (this.state.pipe == '') {
+    if (this.state.pipe == '请选择') {
       Taro.showToast({
         title: '请先选择管材',
         icon: 'none',
@@ -260,17 +625,17 @@ export default class SubmitAZ extends Component {
       })
       return false
     }
-    if (this.state.total === '') {
-      Taro.showToast({
-        title: '请先输入实际费用',
-        icon: 'none',
-        duration: 1500
-      })
-      return false
-    }
-    
+    // if (this.state.total === '') {
+    //   Taro.showToast({
+    //     title: '请先输入实际费用',
+    //     icon: 'none',
+    //     duration: 1500
+    //   })
+    //   return false
+    // }
     // 校验通过
     let fcontent = []
+    let arrIdx = [1, 2, 3, 4, 5]
     let costTmp = this.state.productions.map(item => {
       return {
         fmodelcode: item.fmodelcode,
@@ -287,8 +652,8 @@ export default class SubmitAZ extends Component {
       pipe: this.state.pipe,
       fmeter: this.state.fmeter,
       fnumber: this.state.fnumber,
-      post: this.state.post,
-      leakpro: this.state.leakpro,
+      post: this.state.selectorPost === '无' ? this.state.post : null,
+      leakpro: this.state.selectorLeakpro === '无' ? this.state.leakpro : null,
       price: this.state.sum, // 应收
       price1: this.state.total, // 实收
       price2: this.state.sum - this.state.total, // 优惠
@@ -299,18 +664,24 @@ export default class SubmitAZ extends Component {
     this.setState({
       loading: true
     })
-    this.state.wholeFiles.map((item, idx) => {
-      if (item) {
-        fcontent.push({
-          fobjectname: this.state.workno + '/install/' + this.state.timeStamp[idx].stamp + '_' + (idx + 1) + '.png',
-          lng: this.state.longitude,
-          lat: this.state.latitude,
-          dirct: this.state.timeStamp[idx].dirct
-        })
-      }
+    arrIdx.map(item => {
+      let arrFiles = this.state['wholeFiles' + item ]
+      let arrTimeStamp = this.state['timeStamp' + item ]
+        if (arrFiles.length  > 0) {
+          arrFiles.map((_item, idx) => {
+            if (_item) {
+              fcontent.push({
+                fobjectname: this.state.workno + '/install/' + arrTimeStamp[idx].stamp + '_' + (idx + 1) + '.png',
+                lng: this.state.longitude,
+                lat: this.state.latitude,
+                dirct: arrTimeStamp[idx].dirct
+              })
+            }
+          })
+        }
     })
     installInfo.fcontent = JSON.stringify(fcontent)
-    console.log(installInfo)
+    // console.log(fcontent)
     send.post('cos/uploadInstall', {install: JSON.stringify(installInfo)}).then((res) => {
       switch (res.data.respCode) {
         case '0':
@@ -421,16 +792,31 @@ export default class SubmitAZ extends Component {
 
   onCarTypeChange = e => {
     const selector = this.state.carTypeList[e.detail.value]
+    let cablePipeList = selector.detail.map(item => {
+      item.valueStr = '电缆： ' + item.cable + '\xa0\xa0\xa0|\xa0\xa0\xa0' + '管材： '+ item.pipe
+      return item
+    })
     this.setState({
       selectorChecked: selector.fname,
-      carTypeInfo: selector,
-      pureInstall: selector.detail.isinstall,
+      // carTypeInfo: selector,
+      cablePipeList: cablePipeList,
       fnumber: selector.fnumber,
       postList: selector.postList,
       leakList: selector.leakList,
       selectorPost: '请选择',
       selectorLeakpro: '请选择',
-      isOpened: true
+      cable: '请选择',
+      pipe: '请选择',
+      // isOpened: true
+    })
+  }
+  // 电缆和管材选择切换
+  handleChange_cable_pipe = e => {
+    const selector = this.state.cablePipeList[e.detail.value]
+    this.setState({
+      cable: selector.cable,
+      pipe: selector.pipe,
+      pureInstall: selector.isinstall,
     })
   }
 
@@ -495,13 +881,14 @@ export default class SubmitAZ extends Component {
     })
   }
 
-  getCarTypeList = (cartype) => {
-    send.post('order/cartype', {ftype: cartype}).then((res) => {
+  getCarTypeList = (cartype, id, hosts) => {
+    send.post('order/cartype', {ftype: cartype, hosts: hosts}).then((res) => {
       switch (res.data.respCode) {
         case '0':
           this.setState({
             carTypeList: res.data.data
           })
+          this.getOrdeDetail(id, res.data.data)
           break
         default:
           Taro.showToast({
@@ -596,33 +983,40 @@ export default class SubmitAZ extends Component {
     return (
       <View className='Image'>
         <View className="picList">
-          <Text>请选择要上传的电源点图片</Text>
+          <Text>请选择要上传的条形码照片</Text>
           <AtImagePicker
             sourceType={['camera']}
-            files={this.state.files}
+            files={this.state.files1}
             onChange={this.onChange.bind(this, 1)}
             onImageClick={this.onImageClick.bind(this, 1)}
           />
-          <Text>请选择要上传的人桩合影图片</Text>
+          <Text>请选择要上传的电源点照片</Text>
           <AtImagePicker
             sourceType={['camera']}
             files={this.state.files2}
             onChange={this.onChange.bind(this, 2)}
             onImageClick={this.onImageClick.bind(this, 2)}
           />
-          <Text>请选择要上传的桩前5米图片</Text>
+          <Text>请选择要上传的人桩合影照片</Text>
           <AtImagePicker
             sourceType={['camera']}
             files={this.state.files3}
             onChange={this.onChange.bind(this, 3)}
             onImageClick={this.onImageClick.bind(this, 3)}
           />
-          <Text>请选择要上传的通电测试图片</Text>
+          <Text>请选择要上传的桩前5米照片</Text>
           <AtImagePicker
             sourceType={['camera']}
             files={this.state.files4}
             onChange={this.onChange.bind(this, 4)}
             onImageClick={this.onImageClick.bind(this, 4)}
+          />
+          <Text>请选择要上传的其他照片</Text>
+          <AtImagePicker
+            sourceType={['camera']}
+            files={this.state.files5}
+            onChange={this.onChange.bind(this, 5)}
+            onImageClick={this.onImageClick.bind(this, 5)}
           />
         </View>
         <View className="carType">
@@ -631,6 +1025,36 @@ export default class SubmitAZ extends Component {
             { this.state.selectorChecked }
           </Picker>
         </View>
+        
+        <View className="carType">
+          <Text>电缆</Text>
+          <Picker mode='selector' range={this.state.cablePipeList} rangeKey="valueStr" onChange={this.handleChange_cable_pipe}>
+            { this.state.cable }
+          </Picker>
+          {/* <AtRadio
+            options={[
+              { label: 'YJV 3*6', value: '0'},
+              { label: 'YJV 3*4', value: '1' }
+            ]}
+            value={this.state.cable}
+            onClick={this.handleChange_cable.bind(this)}
+          /> */}
+        </View>
+        <View className="carType">
+          <Text>管材</Text>
+          <Picker mode='selector' range={this.state.cablePipeList} rangeKey="valueStr" onChange={this.handleChange_cable_pipe}>
+            { this.state.pipe }
+          </Picker>
+          {/* <AtRadio
+            options={[
+              { label: 'JDG 25', value: '0'},
+              { label: 'PVC 25', value: '1' }
+            ]}
+            value={this.state.pipe}
+            onClick={this.handleChange_pipe.bind(this)}
+          /> */}
+        </View>
+
         <View className="pureInstall">
           <Text>是否纯安装：</Text>
           <Text>{ this.state.pureInstall }</Text>
@@ -662,28 +1086,7 @@ export default class SubmitAZ extends Component {
             onClick={this.handleChange_isbz.bind(this)}
           />
         </View> */}
-        <View className="contentBar">
-          <Text className="columnTit">电缆</Text>
-          <AtRadio
-            options={[
-              { label: 'YJV 3*6', value: '0'},
-              { label: 'YJV 3*4', value: '1' }
-            ]}
-            value={this.state.cable}
-            onClick={this.handleChange_cable.bind(this)}
-          />
-        </View>
-        <View className="contentBar">
-          <Text className="columnTit">管材</Text>
-          <AtRadio
-            options={[
-              { label: 'JDG 25', value: '0'},
-              { label: 'PVC 25', value: '1' }
-            ]}
-            value={this.state.pipe}
-            onClick={this.handleChange_pipe.bind(this)}
-          />
-        </View>
+        
         <View className="SNCode">
           <AtInput style="text-align:right;"
             name='fmeter'
@@ -741,16 +1144,17 @@ export default class SubmitAZ extends Component {
         <View className="note">
           <AtTextarea style='background:#fff;width:calc(100% - 40px);padding:20rpx 20rpx 0 20rpx;' maxLength={200} height={300} autoHeight placeholder='请输入安装备注' value={this.state.note} onChange={e => this.changeNote(e)}/>
         </View>
-        <View style="width:90%;margin-top:40px;">
-          <AtButton loading={this.state.loading} type='primary' disabled={this.state.loading} onClick={this.submit}>提交</AtButton>
+        <View className="btBlock">
+          <AtButton className="bt" loading={this.state.loading} disabled={this.state.loading} type='primary' onClick={this.submit}>提交</AtButton>
+          <AtButton className="bt" loading={this.state.loading} disabled={this.state.loading} type='secondary' onClick={this.saveTemporary}>暂存</AtButton>
         </View>
-        <AtModal
+        {/* <AtModal
           isOpened={this.state.isOpened}
           title='材料信息'
           confirmText='确认'
           onConfirm={ this.handleConfirmCarType }
           content={'电缆：' + this.state.carTypeInfo.detail.cable + '\n\r' + '管材：' + this.state.carTypeInfo.detail.pipe}
-        />
+        /> */}
       </View>
     )
   }
