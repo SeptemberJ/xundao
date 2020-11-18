@@ -327,6 +327,20 @@ class Detail extends Component {
           <View className="imgList">
             { installImgList5 }
           </View>
+          <Text style="margin-top:10px;display:inline-block;">视频</Text>
+          {
+            (orderDeatil.installList6[0]) && <View className="imgList">
+              <Video
+                src={orderDeatil.installList6[0].url}
+                controls={true}
+                autoplay={false}
+                initialTime='0'
+                id='video'
+                loop={false}
+                muted={false}
+              />
+            </View>
+          }
           <Text>安装备注：</Text>
           <View className="note">
           <Text>{ orderDeatil.install_note }</Text>

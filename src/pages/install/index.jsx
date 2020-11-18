@@ -61,6 +61,7 @@ export default class SubmitAZ extends Component {
       timeStamp3: [],
       timeStamp4: [],
       timeStamp5: [],
+      videoInfo: {url: '', name: ''}, // 视频
       checkSN: 'N', //  Y - 可以为空 N - 不可以为空
       SNCode: '',
       note: '',
@@ -111,15 +112,17 @@ export default class SubmitAZ extends Component {
     send.post('cos/installDetail', {id: id}).then((res) => {
       switch (res.data.respCode) {
         case '0':
+          let cablePipeList = []
           let tmpInfo = {... res.data.data}
           let curType = carTypeList.filter((carType) => {
             return carType.fnumber == tmpInfo.number
           })
-          let cablePipeList = curType[0].detail.map(item => {
-            item.valueStr = '电缆： ' + item.cable + '\xa0\xa0\xa0|\xa0\xa0\xa0' + '管材： '+ item.pipe
-            return item
-          })
-          // console.log(curType)
+          if (curType.length > 0) {
+            cablePipeList = curType[0].detail.map(item => {
+              item.valueStr = '电缆： ' + item.cable + '\xa0\xa0\xa0|\xa0\xa0\xa0' + '管材： '+ item.pipe
+              return item
+            })
+          }
           
           this.setState({
             fnumber: tmpInfo.number,
@@ -142,6 +145,10 @@ export default class SubmitAZ extends Component {
             // carTypeInfo: {detail: curType[0].detail},
             postList: curType.length > 0 ? curType[0].postList : [],
             leakList: curType.length > 0 ? curType[0].leakList : [],
+            videoInfo: {
+              src: tmpInfo.installList6[0] ? tmpInfo.installList6[0].url : '',
+              name: tmpInfo.installList6[0] ? tmpInfo.installList6[0].fbojectname : ''
+            }
             // isOpened: true
           })
           let tmpWholeFiles1 = []
@@ -437,6 +444,41 @@ export default class SubmitAZ extends Component {
     })
   }
 
+  // 视频
+  chooseVideo = () => {
+    wx.chooseVideo({
+      maxDuration: 20,
+      success: (res) => {
+        console.log(res)
+        if (res.duration > 20) {
+          Taro.showToast({
+            title: '视频时长太长,最多20秒!',
+            icon: 'none',
+            duration: 1500
+          })
+          return false
+        }
+        this.setState({
+          videoInfo: {
+            src: res.tempFilePath,
+            name: this.state.workno + '/install/' + res.tempFilePath.slice(11),
+          }
+        })
+        cos.postObject({
+          Bucket: 'xundao-1302369589',
+          Region: 'ap-shanghai',
+          Key: this.state.workno + '/install/' + res.tempFilePath.slice(11),
+          FilePath: res.tempFilePath,
+          onProgress: (info) => {
+            // console.log(JSON.stringify(info))
+          }
+        }, function (err, data) {
+          console.log(err || data)
+        })
+      }
+    })
+  }
+
   saveTemporary = () => {
     // 什么都没填写时不能暂存
     if (this.state.files1.length == 0 && this.state.files2.length == 0 && this.state.files3.length == 0 && this.state.files4.length == 0 && this.state.selectorChecked == '请选择' && this.state.selectorPost == '请选择' && this.state.selectorLeakpro == '请选择' && this.state.cable == '请选择' && this.state.pipe == '请选择' && !this.state.fmeter) {
@@ -467,8 +509,8 @@ export default class SubmitAZ extends Component {
       pipe: this.state.pipe === '请选择' ? '': this.state.pipe ,
       fmeter: this.state.fmeter,
       fnumber: this.state.fnumber,
-      post: this.state.selectorPost === '无' ? this.state.post : null,
-      leakpro: this.state.selectorLeakpro === '无' ? this.state.leakpro : null,
+      post: this.state.selectorPost === '请选择' ? null : (this.state.selectorPost === '无' ? '' : this.state.post),
+      leakpro: this.state.selectorLeakpro === '请选择' ? null : (this.state.selectorLeakpro === '无' ? '' : this.state.leakpro),
       price: this.state.sum, // 应收
       price1: this.state.total, // 实收
       price2: this.state.sum - this.state.total, // 优惠
@@ -495,6 +537,14 @@ export default class SubmitAZ extends Component {
           })
         }
     })
+    if (this.state.videoInfo.src) {
+      fcontent.push({
+        fobjectname: this.state.videoInfo.name,
+        lng: this.state.longitude,
+        lat: this.state.latitude,
+        dirct: 6
+      })
+    }
     installInfo.fcontent = JSON.stringify(fcontent)
     // console.log(fcontent)
     send.post('cos/uploadInstall', {install: JSON.stringify(installInfo)}).then((res) => {
@@ -652,8 +702,8 @@ export default class SubmitAZ extends Component {
       pipe: this.state.pipe,
       fmeter: this.state.fmeter,
       fnumber: this.state.fnumber,
-      post: this.state.selectorPost === '无' ? this.state.post : null,
-      leakpro: this.state.selectorLeakpro === '无' ? this.state.leakpro : null,
+      post: this.state.selectorPost === '无' ? '' : this.state.post,
+      leakpro: this.state.selectorLeakpro === '无' ? '' : this.state.leakpro,
       price: this.state.sum, // 应收
       price1: this.state.total, // 实收
       price2: this.state.sum - this.state.total, // 优惠
@@ -680,6 +730,14 @@ export default class SubmitAZ extends Component {
           })
         }
     })
+    if (this.state.videoInfo.src) {
+      fcontent.push({
+        fobjectname: this.state.videoInfo.name,
+        lng: this.state.longitude,
+        lat: this.state.latitude,
+        dirct: 6
+      })
+    }
     installInfo.fcontent = JSON.stringify(fcontent)
     // console.log(fcontent)
     send.post('cos/uploadInstall', {install: JSON.stringify(installInfo)}).then((res) => {
@@ -985,39 +1043,52 @@ export default class SubmitAZ extends Component {
         <View className="picList">
           <Text>请选择要上传的条形码照片</Text>
           <AtImagePicker
-            sourceType={['camera']}
+            sourceType={['album', 'camera']}
             files={this.state.files1}
             onChange={this.onChange.bind(this, 1)}
             onImageClick={this.onImageClick.bind(this, 1)}
           />
           <Text>请选择要上传的电源点照片</Text>
           <AtImagePicker
-            sourceType={['camera']}
+            sourceType={['album', 'camera']}
             files={this.state.files2}
             onChange={this.onChange.bind(this, 2)}
             onImageClick={this.onImageClick.bind(this, 2)}
           />
           <Text>请选择要上传的人桩合影照片</Text>
           <AtImagePicker
-            sourceType={['camera']}
+            sourceType={['album', 'camera']}
             files={this.state.files3}
             onChange={this.onChange.bind(this, 3)}
             onImageClick={this.onImageClick.bind(this, 3)}
           />
           <Text>请选择要上传的桩前5米照片</Text>
           <AtImagePicker
-            sourceType={['camera']}
+            sourceType={['album', 'camera']}
             files={this.state.files4}
             onChange={this.onChange.bind(this, 4)}
             onImageClick={this.onImageClick.bind(this, 4)}
           />
           <Text>请选择要上传的其他照片</Text>
           <AtImagePicker
-            sourceType={['camera']}
+            sourceType={['album', 'camera']}
             files={this.state.files5}
             onChange={this.onChange.bind(this, 5)}
             onImageClick={this.onImageClick.bind(this, 5)}
           />
+          <Text>请选择要上传的视频</Text>
+          {
+            (this.state.videoInfo.src) && <Video
+              src={this.state.videoInfo.src}
+              controls={true}
+              autoplay={false}
+              initialTime='0'
+              id='video'
+              loop={false}
+              muted={false}
+            />
+          }
+          <AtButton type='primary' size='small' onClick={this.chooseVideo.bind(this)}>选择视频</AtButton>
         </View>
         <View className="carType">
           <Text>型号：</Text>

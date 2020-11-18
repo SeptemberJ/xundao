@@ -402,7 +402,7 @@ export default class SubmitKC extends Component {
         <View className="picList">
           <Text>请选择要上传的图片</Text>
           <AtImagePicker
-            sourceType={['camera']}
+            sourceType={['album', 'camera']}
             files={this.state.files}
             onChange={this.onChange}
             onImageClick={this.onImageClick}

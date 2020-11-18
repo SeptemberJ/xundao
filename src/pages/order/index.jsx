@@ -62,7 +62,8 @@ class Order extends Component {
       suspendOptions: [],
       ftypeOptions: [],
       isShowMaterial: false,
-      carTypeInfo: {detail: {cable: '', pipe: ''}},
+      carTypeInfo: {},
+      detailStr: '',
       isOpenedBook: false,
       appdate: '请选择',
       appTime: '请选择',
@@ -470,9 +471,14 @@ class Order extends Component {
   }
   
   showMaterial = (carType) => {
+    let detailStr = ''
+    carType.detail.map(item => {
+      detailStr += '电缆：' + item.cable + '\xa0\xa0\xa0|\xa0\xa0\xa0' + '管材：' + item.pipe + '\n\r'
+    })
     this.setState({
       isShowMaterial: true,
-      carTypeInfo: carType
+      carTypeInfo: carType,
+      detailStr: detailStr
     })
   }
   handleConfirmCarType  = () => {
@@ -480,10 +486,20 @@ class Order extends Component {
       isShowMaterial: false
     })
   }
-  makeCall  = (phone, e) => {
+  makeCall  = (phone, id, e) => {
     e.stopPropagation()
     Taro.makePhoneCall({
       phoneNumber: phone //仅为示例，并非真实的电话号码
+    })
+    // 记录打电话时间
+    send.post('order/call', {orderid: id}).then((res) => {
+      if (res.data.respCode !== '0') {
+        Taro.showToast({
+          title: '时间记录失败',
+          icon: 'none',
+          duration: 1500
+        })
+      }
     })
   }
 
@@ -604,9 +620,9 @@ class Order extends Component {
     })
   }
 
-  getCarTypeList = (cartype, e) => {
+  getCarTypeList = (cartype, hosts, e) => {
     e.stopPropagation()
-    send.post('order/cartype', {ftype: cartype}).then((res) => {
+    send.post('order/cartype', {ftype: cartype, hosts: hosts}).then((res) => {
       switch (res.data.respCode) {
         case '0':
           this.setState({
@@ -797,7 +813,7 @@ class Order extends Component {
               <View>
                 <Text>建桩联系电话：</Text>
                 <Text>{order.construct_stake_phone}</Text>
-                <Image className="makeCallIcon" onClick={this.makeCall.bind(this, order.construct_stake_phone)} src={shouji}/>
+                <Image className="makeCallIcon" onClick={this.makeCall.bind(this, order.construct_stake_phone, order.id)} src={shouji}/>
                 {
                   (currentTabIdx == 0) && <View style="float:right;" onClick={this.book.bind(this, order, idx)}>
                     <AtButton size='small' className="carType">预约</AtButton>
@@ -805,7 +821,7 @@ class Order extends Component {
                 }
               </View>
             </View>
-            <View className="itemBar">
+            <View className="itemBar" style="min-height: 60rpx;line-height:auto;">
               <View>
                 <Text>建桩地址：</Text>
                 <Text>{order.construct_stake_address}</Text>
@@ -823,7 +839,7 @@ class Order extends Component {
               <Text>车型：</Text>
               <Text>{order.cartype}</Text>
               {
-                (currentTabIdx == 0 || currentTabIdx == 1) && <View style="float:right;" onClick={this.getCarTypeList.bind(this, order.cartype)}>
+                (currentTabIdx == 0 || currentTabIdx == 1) && <View style="float:right;" onClick={this.getCarTypeList.bind(this, order.cartype, order.hosts)}>
                   <AtButton size='small' className="carType">查看</AtButton>
                 </View>
               }
@@ -941,7 +957,7 @@ class Order extends Component {
           title='材料信息'
           confirmText='确认'
           onConfirm={ this.handleConfirmCarType }
-          content={'电缆：' + this.state.carTypeInfo.detail.cable + '\n\r' + '管材：' + this.state.carTypeInfo.detail.pipe}
+          content={this.state.detailStr}
         />
         <AtModal
         isOpened={this.state.isOpened}
