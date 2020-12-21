@@ -35,6 +35,7 @@ export default class SubmitAZ extends Component {
       carTypeList: [],
       selectorChecked: '请选择',
       // carTypeInfo: {detail: {cable: '', pipe: ''}}, // 弹出的电缆和管材信息
+      pureInstallList: ['是', '否'],
       pureInstall: '',
       fnumber: '', // 型号
       selectorPost: '', // 立柱fname
@@ -503,6 +504,7 @@ export default class SubmitAZ extends Component {
       fstatus: '2',
       id: this.state.id,
       installNote: this.state.note,
+      ispure: this.state.pureInstall,
       sn: this.state.SNCode,
       // isbz: this.state.isbz == "null" ? null : this.state.isbz,
       cable: this.state.cable === '请选择' ? '' : this.state.cable,
@@ -696,6 +698,7 @@ export default class SubmitAZ extends Component {
     let installInfo = {
       id: this.state.id,
       installNote: this.state.note,
+      ispure: this.state.pureInstall,
       sn: this.state.SNCode,
       // isbz: this.state.isbz == "null" ? null : this.state.isbz,
       cable: this.state.cable,
@@ -877,7 +880,13 @@ export default class SubmitAZ extends Component {
       pureInstall: selector.isinstall,
     })
   }
-
+  // 是否纯安装 否 可以切换选择
+  onPureInstallChange = e => {
+    const selector = this.state.pureInstallList[e.detail.value]
+    this.setState({
+      pureInstall: selector
+    })
+  }
   onPostChange = e => {
     const selector = this.state.postList[e.detail.value]
     this.setState({
@@ -1128,7 +1137,14 @@ export default class SubmitAZ extends Component {
 
         <View className="pureInstall">
           <Text>是否纯安装：</Text>
-          <Text>{ this.state.pureInstall }</Text>
+          {
+            (this.state.pureInstall == '严格出') && <Text>{ this.state.pureInstall }</Text>
+          }
+          {
+            (this.state.pureInstall != '严格出') && <Picker mode='selector' range={this.state.pureInstallList} onChange={this.onPureInstallChange}>
+            { this.state.pureInstall }
+          </Picker>
+          }
         </View>
         <View className="SNCode">
           <Text>SN码：{ this.state.SNCode }</Text>
