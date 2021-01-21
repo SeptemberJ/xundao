@@ -40,8 +40,6 @@ export default class SubmitKC extends Component {
       plandate: '请选择',
       confirmdate: '请选择',
       files: [],
-      wholeFiles: [], // 完整图片list占位
-      timeStamp: [], // 图片命名时间戳list占位
       note: ''
     }
   }
@@ -64,17 +62,18 @@ export default class SubmitKC extends Component {
       switch (res.data.respCode) {
         case '0':
           let tmpInfo = {... res.data.data}
-          let tmpWholeFiles = []
-          let tmpTimeStamp = []
+          // let tmpWholeFiles = []
+          // let tmpTimeStamp = []
           let tmpSurveyList = res.data.data.surveyList.map(item => {
             let url = item.url.replace(/[\r\n]/g,"")
-            let fileName  = item.fbojectname.split('/')[2]
-            tmpTimeStamp.push(fileName.split('_')[0])
-            tmpWholeFiles.push(url)
+            // let fileName  = item.fbojectname.split('/')[2]
+            // tmpTimeStamp.push(fileName.split('_')[0])
+            // tmpWholeFiles.push(url)
             let obj = {
               file: {
                 path: url
               },
+              fileName: item.fbojectname,
               url: url
             }
             return obj
@@ -83,8 +82,6 @@ export default class SubmitKC extends Component {
           this.setState({
             isbz: tmpInfo.fisbz,
             files: tmpSurveyList,
-            wholeFiles: tmpWholeFiles,
-            timeStamp: tmpTimeStamp,
             note: tmpInfo.survey_note
           })
           break
@@ -99,44 +96,45 @@ export default class SubmitKC extends Component {
   }
   onChange = (files, doType, index) => {
     console.log(doType, index, files)
-    let removePathIdx = null
-    let len = files.length
-    let oldWholeFiles = [...this.state.wholeFiles]
-    let oldTimeStamp = [...this.state.timeStamp]
-    let curTimeStamp = (new Date()).getTime()
+    let stateFiles = this.state.files
     
-    // 添加图片
+    // 添加视频
     if (doType == 'add') {
-      let newestFile = files[len - 1]
-      oldWholeFiles.push(newestFile.url)
-      oldTimeStamp.push(curTimeStamp)
-      this.setState({
-        files: files,
-        wholeFiles: oldWholeFiles,
-        timeStamp: oldTimeStamp
-      })
-      
-      cos.postObject({
-        Bucket: 'xundao-1302369589',
-        Region: 'ap-shanghai',
-        Key: this.state.workno + '/survey/' + curTimeStamp + '_' + oldWholeFiles.length + '.png',
-        FilePath: (files[files.length - 1]).file.path,
-        onProgress: function (info) {
-          // console.log(JSON.stringify(info))
+      files.map((item, idx) => {
+        if (idx >= stateFiles.length) {
+          // 新增的才需要上传
+          let newestFile = item
+          // 上传COS
+          cos.postObject({
+            Bucket: 'xundao-1302369589',
+            Region: 'ap-shanghai',
+            Key: this.state.workno + '/survey/' + item.file.path.slice(11),
+            FilePath: item.file.path,
+            onProgress: (info) => {
+              // console.log(JSON.stringify(info))
+            }
+          }, (err, data) => {
+            if (data) {
+              stateFiles.push({...newestFile, ...{fileName: this.state.workno + '/survey/' + item.file.path.slice(11)}})
+              this.setState({
+                files: stateFiles
+              })
+            }
+            if (err) {
+              Taro.showModal({
+                title: '提示',
+                content: `图片上传失败`,
+                showCancel: false
+              })
+            }
+          })
         }
-      }, function (err, data) {
-        // console.log(err || data)
       })
     }
     // 移除图片
     if (doType == 'remove') {
-      removePathIdx = oldWholeFiles.indexOf(this.state.files[index].url)
-      oldWholeFiles.splice(removePathIdx, 1, null)
-      oldTimeStamp.splice(removePathIdx, 1, null)
       this.setState({
-        files: files,
-        wholeFiles: oldWholeFiles,
-        timeStamp: oldTimeStamp
+        files: files
       })
     }
   }
@@ -214,10 +212,10 @@ export default class SubmitKC extends Component {
     this.setState({
       loading: true
     })
-    this.state.wholeFiles.map((item, idx) => {
+    this.state.files.map((item, idx) => {
       if (item) {
         fcontent.push({
-          fobjectname: this.state.workno + '/survey/' + this.state.timeStamp[idx] + '_' + (idx + 1) + '.png',
+          fobjectname: item.fileName,
           lng: this.state.longitude,
           lat: this.state.latitude
         })
@@ -300,10 +298,10 @@ export default class SubmitKC extends Component {
     this.setState({
       loading: true
     })
-    this.state.wholeFiles.map((item, idx) => {
+    this.state.files.map((item, idx) => {
       if (item) {
         fcontent.push({
-          fobjectname: this.state.workno + '/survey/' + this.state.timeStamp[idx] + '_' + (idx + 1) + '.png',
+          fobjectname: item.fileName,
           lng: this.state.longitude,
           lat: this.state.latitude
         })

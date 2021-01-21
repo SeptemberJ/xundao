@@ -52,16 +52,6 @@ export default class SubmitAZ extends Component {
       files3: [],
       files4: [],
       files5: [],
-      wholeFiles1: [], // 完整图片list占位
-      wholeFiles2: [],
-      wholeFiles3: [],
-      wholeFiles4: [],
-      wholeFiles5: [],
-      timeStamp1: [], // 图片命名时间戳list占位
-      timeStamp2: [],
-      timeStamp3: [],
-      timeStamp4: [],
-      timeStamp5: [],
       videoInfo: {url: '', name: ''}, // 视频
       checkSN: 'N', //  Y - 可以为空 N - 不可以为空
       SNCode: '',
@@ -152,120 +142,75 @@ export default class SubmitAZ extends Component {
             }
             // isOpened: true
           })
-          let tmpWholeFiles1 = []
-          let tmpWholeFiles2 = []
-          let tmpWholeFiles3 = []
-          let tmpWholeFiles4 = []
-          let tmpWholeFiles5 = []
-          let tmpTimeStamp1 = []
-          let tmpTimeStamp2 = []
-          let tmpTimeStamp3 = []
-          let tmpTimeStamp4 = []
-          let tmpTimeStamp5 = []
           let tmpSurveyList1 = tmpInfo.installList.map(item => {
             let url = item.url.replace(/[\r\n]/g,"")
-            let fileName  = item.fbojectname.split('/')[2]
-            tmpTimeStamp1.push({
-              dirct: 1,
-              stamp: fileName.split('_')[0]
-            })
-            tmpWholeFiles1.push(url)
             let obj = {
               file: {
                 path: url
               },
+              fileName: item.fbojectname,
               url: url
             }
             return obj
           })
           this.setState({
-            files1: tmpSurveyList1,
-            wholeFiles1: tmpWholeFiles1,
-            timeStamp1: tmpTimeStamp1
+            files1: tmpSurveyList1
           })
           let tmpSurveyList2 = tmpInfo.installList2.map(item => {
             let url = item.url.replace(/[\r\n]/g,"")
-            let fileName  = item.fbojectname.split('/')[2]
-            tmpTimeStamp2.push({
-              dirct: 2,
-              stamp: fileName.split('_')[0]
-            })
-            tmpWholeFiles2.push(url)
             let obj = {
               file: {
                 path: url
               },
+              fileName: item.fbojectname,
               url: url
             }
             return obj
           })
           this.setState({
-            files2: tmpSurveyList2,
-            wholeFiles2: tmpWholeFiles2,
-            timeStamp2: tmpTimeStamp2
+            files2: tmpSurveyList2
           })
           let tmpSurveyList3 = tmpInfo.installList3.map(item => {
             let url = item.url.replace(/[\r\n]/g,"")
-            let fileName  = item.fbojectname.split('/')[2]
-            tmpTimeStamp3.push({
-              dirct: 3,
-              stamp: fileName.split('_')[0]
-            })
-            tmpWholeFiles3.push(url)
             let obj = {
               file: {
                 path: url
               },
+              fileName: item.fbojectname,
               url: url
             }
             return obj
           })
           this.setState({
-            files3: tmpSurveyList3,
-            wholeFiles3: tmpWholeFiles3,
-            timeStamp3: tmpTimeStamp3
+            files3: tmpSurveyList3
           })
           let tmpSurveyList4 = tmpInfo.installList4.map(item => {
             let url = item.url.replace(/[\r\n]/g,"")
-            let fileName  = item.fbojectname.split('/')[2]
-            tmpTimeStamp4.push({
-              dirct: 4,
-              stamp: fileName.split('_')[0]
-            })
-            tmpWholeFiles4.push(url)
             let obj = {
               file: {
                 path: url
               },
+              fileName: item.fbojectname,
               url: url
             }
             return obj
           })
           this.setState({
-            files4: tmpSurveyList4,
-            wholeFiles4: tmpWholeFiles4,
-            timeStamp4: tmpTimeStamp4
+            files4: tmpSurveyList4
           })
           let tmpSurveyList5 = tmpInfo.installList5.map(item => {
             let url = item.url.replace(/[\r\n]/g,"")
-            let fileName  = item.fbojectname.split('/')[2]
-            tmpTimeStamp5.push({
-              dirct: 5,
-              stamp: fileName.split('_')[0]
-            })
-            tmpWholeFiles5.push(url)
             let obj = {
               file: {
                 path: url
               },
+              fileName: item.fbojectname,
               url: url
             }
             return obj
           })
           this.setState({
-            files5: tmpSurveyList5,
-            wholeFiles5: tmpWholeFiles5,
-            timeStamp5: tmpTimeStamp5
+            files5: tmpSurveyList5
           })
           break
         default:
@@ -280,113 +225,93 @@ export default class SubmitAZ extends Component {
   
   onChange = (type, files, doType, index) => {
     console.log(doType, index, files, type)
-    let removePathIdx = null
-    let len = files.length
-    let oldWholeFiles = [...this.state['wholeFiles' + type]]
-    let oldTimeStamp = [...this.state['timeStamp' + type]]
-    let curTimeStamp = (new Date()).getTime()
+    let stateFiles = this.state['files' + type]
     // 添加图片
     if (doType == 'add') {
-      let newestFile = files[len - 1]
-      oldWholeFiles.push(newestFile.url)
-      oldTimeStamp.push({dirct: type, stamp: curTimeStamp})
-      switch (type) {
-        case 1:
-          this.setState({
-            files1: files,
-            wholeFiles1: oldWholeFiles,
-            timeStamp1: oldTimeStamp
+      files.map((item, idx) => {
+        if (idx >= stateFiles.length) {
+          // 新增的才需要上传
+          let newestFile = item
+          // 上传图片到COS
+          cos.postObject({
+            Bucket: 'xundao-1302369589',
+            Region: 'ap-shanghai',
+            Key: this.state.workno + '/install/' + item.file.path.slice(11),
+            FilePath: item.file.path,
+            onProgress: function (info) {
+              // console.log(JSON.stringify(info))
+            }
+          }, (err, data) => {
+            if (data) {
+              stateFiles.push({...newestFile, ...{fileName: this.state.workno + '/install/' + item.file.path.slice(11)}})
+              switch (type) {
+                case 1:
+                  this.setState({
+                    files1: stateFiles
+                  })
+                  break
+                case 2:
+                  this.setState({
+                    files2: stateFiles
+                  })
+                  break
+                case 3:
+                  this.setState({
+                    files3: stateFiles
+                  })
+                  break
+                case 4:
+                  this.setState({
+                    files4: stateFiles
+                  })
+                  break
+                case 5:
+                  this.setState({
+                    files5: stateFiles
+                  })
+                  break
+              }
+            }
+            if (err) {
+              Taro.showModal({
+                title: '提示',
+                content: `图片上传失败`,
+                showCancel: false
+              })
+            }
           })
-          break
-        case 2:
-          this.setState({
-            files2: files,
-            wholeFiles2: oldWholeFiles,
-            timeStamp2: oldTimeStamp
-          })
-          break
-        case 3:
-          this.setState({
-            files3: files,
-            wholeFiles3: oldWholeFiles,
-            timeStamp3: oldTimeStamp
-          })
-          break
-        case 4:
-          this.setState({
-            files4: files,
-            wholeFiles4: oldWholeFiles,
-            timeStamp4: oldTimeStamp
-          })
-          break
-        case 5:
-          this.setState({
-            files5: files,
-            wholeFiles5: oldWholeFiles,
-            timeStamp5: oldTimeStamp
-          })
-          break
-      }
-      // 上传图片到COS
-      cos.postObject({
-        Bucket: 'xundao-1302369589',
-        Region: 'ap-shanghai',
-        Key: this.state.workno + '/install/' + curTimeStamp + '_' + oldWholeFiles.length + '.png',
-        FilePath: (files[files.length - 1]).file.path,
-        onProgress: function (info) {
-          // console.log(JSON.stringify(info))
         }
-      }, function (err, data) {
-        // console.log(err || data)
       })
     }
     // 移除图片
     if (doType == 'remove') {
-      removePathIdx = oldWholeFiles.indexOf(this.state['files' + type][index].url)
-      oldWholeFiles.splice(removePathIdx, 1, null)
-      oldTimeStamp.splice(removePathIdx, 1, null)
       switch (type) {
         case 1:
           this.setState({
-            files1: files,
-            wholeFiles1: oldWholeFiles,
-            timeStamp1: oldTimeStamp
+            files1: files
           })
           break
         case 2:
           this.setState({
-            files2: files,
-            wholeFiles2: oldWholeFiles,
-            timeStamp2: oldTimeStamp
+            files2: files
           })
           break
         case 3:
           this.setState({
-            files3: files,
-            wholeFiles3: oldWholeFiles,
-            timeStamp3: oldTimeStamp
+            files3: files
           })
           break
         case 4:
           this.setState({
-            files4: files,
-            wholeFiles4: oldWholeFiles,
-            timeStamp4: oldTimeStamp
+            files4: files
           })
           break
         case 5:
           this.setState({
-            files5: files,
-            wholeFiles5: oldWholeFiles,
-            timeStamp5: oldTimeStamp
+            files5: files
           })
           break
       }
-      // this.setState({
-      //   files: files,
-      //   wholeFiles: oldWholeFiles,
-      //   timeStamp: oldTimeStamp
-      // })
     }
   }
 
@@ -459,12 +384,6 @@ export default class SubmitAZ extends Component {
           })
           return false
         }
-        this.setState({
-          videoInfo: {
-            src: res.tempFilePath,
-            name: this.state.workno + '/install/' + res.tempFilePath.slice(11),
-          }
-        })
         cos.postObject({
           Bucket: 'xundao-1302369589',
           Region: 'ap-shanghai',
@@ -475,6 +394,21 @@ export default class SubmitAZ extends Component {
           }
         }, function (err, data) {
           console.log(err || data)
+          if (data) {
+            this.setState({
+              videoInfo: {
+                src: res.tempFilePath,
+                name: this.state.workno + '/install/' + res.tempFilePath.slice(11),
+              }
+            })
+          }
+          if (err) {
+            Taro.showModal({
+              title: '提示',
+              content: `视频上传失败`,
+              showCancel: false
+            })
+          }
         })
       }
     })
@@ -523,17 +457,16 @@ export default class SubmitAZ extends Component {
     this.setState({
       loading: true
     })
-    arrIdx.map(item => {
-      let arrFiles = this.state['wholeFiles' + item ]
-      let arrTimeStamp = this.state['timeStamp' + item ]
+    arrIdx.map(idx => {
+      let arrFiles = this.state['files' + idx ]
         if (arrFiles.length  > 0) {
-          arrFiles.map((_item, idx) => {
-            if (_item) {
+          arrFiles.map((item) => {
+            if (item) {
               fcontent.push({
-                fobjectname: this.state.workno + '/install/' + arrTimeStamp[idx].stamp + '_' + (idx + 1) + '.png',
+                fobjectname: item.fileName,
                 lng: this.state.longitude,
                 lat: this.state.latitude,
-                dirct: arrTimeStamp[idx].dirct
+                dirct: idx
               })
             }
           })
@@ -717,17 +650,16 @@ export default class SubmitAZ extends Component {
     this.setState({
       loading: true
     })
-    arrIdx.map(item => {
-      let arrFiles = this.state['wholeFiles' + item ]
-      let arrTimeStamp = this.state['timeStamp' + item ]
+    arrIdx.map(idx => {
+      let arrFiles = this.state['files' + idx ]
         if (arrFiles.length  > 0) {
-          arrFiles.map((_item, idx) => {
-            if (_item) {
+          arrFiles.map((item) => {
+            if (item) {
               fcontent.push({
-                fobjectname: this.state.workno + '/install/' + arrTimeStamp[idx].stamp + '_' + (idx + 1) + '.png',
+                fobjectname: item.fileName,
                 lng: this.state.longitude,
                 lat: this.state.latitude,
-                dirct: arrTimeStamp[idx].dirct
+                dirct: idx
               })
             }
           })
