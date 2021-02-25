@@ -9,6 +9,7 @@ import './index.scss'
 import kanchaIcon from '../../images/kancha.png'
 import anzhuang from '../../images/anzhuang.png'
 import baozhuang from '../../images/baozhuang.png'
+import tuihui from '../../images/tuihui.png'
 import shenhe from '../../images/shenhe.png'
 import wancheng from '../../images/wancheng.png'
 import finished from '../../images/finished.png'
@@ -762,7 +763,8 @@ class Order extends Component {
     const orders = orderList.map((order, idx) => {
       return <View key={order.id} className="orderItem">
           <View className="itemBar">
-            <Image className="leftIcon"  src={currentTabIdx == '0' ? kanchaIcon : (currentTabIdx == '1' ? (order.fstatus == 'D' ? baozhuang : anzhuang) : (currentTabIdx == '2' ? shenhe : (wancheng)))} />
+            {/* <Image className="leftIcon"  src={currentTabIdx == '0' ? kanchaIcon : (currentTabIdx == '1' ? (order.fstatus == 'D' ? baozhuang : anzhuang) : (currentTabIdx == '2' ? shenhe : (wancheng)))} /> */}
+            <Image className="leftIcon"  src={order.isback == 1 ? tuihui : (currentTabIdx == '0' ? kanchaIcon : (currentTabIdx == '1' ? (order.fstatus == 'D' ? baozhuang : anzhuang) : (currentTabIdx == '2' ? shenhe : (wancheng))))} />
             <View style="width:120px;display:flex;justify-content:flex-end;">
               {
                 (order.fstatus != 'C' && order.fstatus != 'D' && (currentTabIdx == 0 || currentTabIdx == 1)) && <AtButton  className="stopBt" size='small' onClick={this.suspend.bind(this, order, idx)}>暂停</AtButton>
@@ -786,12 +788,17 @@ class Order extends Component {
           </View>
           <View onClick={this.toDetail.bind(this, order.id)}>
             <View className="itemBar">
-              <View>
+              <View style="width: 100%;">
                 <Text>工单号：</Text>
                 <Text>{order.workno}</Text>
+                {
+                  (currentTabIdx == 0) && <View style="float:right;margin-top: 2px;margin-right:5px;" onClick={this.book.bind(this, order, idx)}>
+                    <AtButton size='small' className="carType">预约</AtButton>
+                  </View>
+                }
               </View>
             </View>
-            <View className="itemBar">
+            {/* <View className="itemBar">
               <View>
                 <Text>车主姓名：</Text>
                 <Text>{order.driver_name}</Text>
@@ -802,23 +809,23 @@ class Order extends Component {
                 <Text>车主电话：</Text>
                 <Text>{order.driver_phone}</Text>
               </View>
-            </View>
-            <View className="itemBar">
+            </View> */}
+            {/* <View className="itemBar">
               <View>
                 <Text>建桩联系人：</Text>
                 <Text>{order.construct_stake_contact}</Text>
               </View>
-            </View>
+            </View> */}
             <View className="itemBar" style="justify-content: flex-start;">
               <View>
-                <Text>建桩联系电话：</Text>
-                <Text>{order.construct_stake_phone}</Text>
+                <Text>建桩联系人：</Text>
+                <Text>{order.construct_stake_contact} {order.construct_stake_phone}</Text>
                 <Image className="makeCallIcon" onClick={this.makeCall.bind(this, order.construct_stake_phone, order.id)} src={shouji}/>
-                {
+                {/* {
                   (currentTabIdx == 0) && <View style="float:right;" onClick={this.book.bind(this, order, idx)}>
                     <AtButton size='small' className="carType">预约</AtButton>
                   </View>
-                }
+                } */}
               </View>
             </View>
             <View className="itemBar" style="min-height: 60rpx;line-height:auto;">
@@ -871,6 +878,14 @@ class Order extends Component {
               <View>
                 <Text>米数：</Text>
                 <Text>{order.fmeter}</Text>
+              </View>
+            </View>
+            }
+            {
+              (order.isback == 1) && <View className="itemBar" style="min-height: 60rpx;line-height:auto;">
+              <View>
+                <Text>退回原因：</Text>
+                <Text>{order.reason}</Text>
               </View>
             </View>
             }

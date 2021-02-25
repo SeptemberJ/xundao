@@ -224,7 +224,7 @@ export default class SubmitAZ extends Component {
   }
   
   onChange = (type, files, doType, index) => {
-    console.log(doType, index, files, type)
+    // console.log(doType, index, files, type)
     let stateFiles = this.state['files' + type]
     // 添加图片
     if (doType == 'add') {

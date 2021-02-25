@@ -95,10 +95,10 @@ export default class SubmitKC extends Component {
     })
   }
   onChange = (files, doType, index) => {
-    console.log(doType, index, files)
+    // console.log(doType, index, files)
     let stateFiles = this.state.files
     
-    // 添加视频
+    // 添加图片
     if (doType == 'add') {
       files.map((item, idx) => {
         if (idx >= stateFiles.length) {
