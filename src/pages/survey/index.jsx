@@ -35,6 +35,7 @@ export default class SubmitKC extends Component {
       longitude: '',
       loading: false,
       isbz: '',
+      ftype: '',
       curDate: '',
       sendbzdate: '请选择',
       plandate: '请选择',
@@ -81,6 +82,7 @@ export default class SubmitKC extends Component {
           tmpInfo.surveyList = tmpSurveyList
           this.setState({
             isbz: tmpInfo.fisbz,
+            ftype: tmpInfo.ftype === '替换桩' ? '1' : (tmpInfo.ftype === '新建桩' ? '0' : ''),
             files: tmpSurveyList,
             note: tmpInfo.survey_note
           })
@@ -188,6 +190,18 @@ export default class SubmitKC extends Component {
       })
     }
   }
+  handleChange_ftype (value) {
+    this.setState({
+      ftype: value
+    })
+    if (value != 1) {
+      this.setState({
+        sendbzdate: '请选择',
+        plandate: '请选择',
+        confirmdate: '请选择'
+      })
+    }
+  }
 
   onDateChange_send = (e) => {
     this.setState({
@@ -221,7 +235,7 @@ export default class SubmitKC extends Component {
         })
       }
     })
-    send.post('cos/uploadSurvey',{survey: JSON.stringify({fstatus: '1', id: this.state.id, surveyNote: this.state.note, isbz: this.state.isbz, fcontent: JSON.stringify(fcontent)})}).then((res) => {
+    send.post('cos/uploadSurvey',{survey: JSON.stringify({fstatus: '1', id: this.state.id, surveyNote: this.state.note, isbz: this.state.isbz, ftype: this.state.ftype, fcontent: JSON.stringify(fcontent)})}).then((res) => {
       switch (res.data.respCode) {
         case '0':
           Taro.showToast({
@@ -256,6 +270,14 @@ export default class SubmitKC extends Component {
     if (this.state.isbz == '') {
       Taro.showToast({
         title: '请先选择报装类型',
+        icon: 'none',
+        duration: 1500
+      })
+      return false
+    }
+    if (this.state.ftype == '') {
+      Taro.showToast({
+        title: '请先选择建桩类型',
         icon: 'none',
         duration: 1500
       })
@@ -307,7 +329,7 @@ export default class SubmitKC extends Component {
         })
       }
     })
-    send.post('cos/uploadSurvey',{survey: JSON.stringify({id: this.state.id, surveyNote: this.state.note, isbz: this.state.isbz, fcontent: JSON.stringify(fcontent)})}).then((res) => {
+    send.post('cos/uploadSurvey',{survey: JSON.stringify({id: this.state.id, surveyNote: this.state.note, isbz: this.state.isbz, ftype: this.state.ftype, fcontent: JSON.stringify(fcontent)})}).then((res) => {
       switch (res.data.respCode) {
         case '0':
           Taro.showToast({
@@ -371,6 +393,17 @@ export default class SubmitKC extends Component {
             ]}
             value={this.state.isbz}
             onClick={this.handleChange_isbz.bind(this)}
+          />
+        </View>
+        <View className="contentBar">
+          <Text className="columnTit">建桩类型</Text>
+          <AtRadio
+            options={[
+              { label: '新建桩', value: '0' },
+              { label: '替换桩', value: '1' }
+            ]}
+            value={this.state.ftype}
+            onClick={this.handleChange_ftype.bind(this)}
           />
         </View>
         {/* {

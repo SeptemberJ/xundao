@@ -184,6 +184,24 @@ class Detail extends Component {
               <Text>{orderDeatil.construct_stake_address}</Text>
             </View>
           </View>
+          <View className="itemBar">
+            <View>
+              <Text>备注：</Text>
+              <Text>{orderDeatil.fnote}</Text>
+            </View>
+          </View>
+          <View className="itemBar">
+            <View>
+              <Text>服务商：</Text>
+              <Text>{orderDeatil.serviceProvider}</Text>
+            </View>
+          </View>
+          <View className="itemBar">
+            <View>
+              <Text>建桩类型：</Text>
+              <Text>{orderDeatil.ftype}</Text>
+            </View>
+          </View>
           {
             orderDeatil.appdate && <View className="itemBar">
               <View>
