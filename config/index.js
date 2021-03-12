@@ -9,6 +9,8 @@ const config = {
   },
   sourceRoot: 'src',
   outputRoot: 'dist',
+  enablePullDownRefresh: false, 
+  onReachBottomDistance:50,
   babel: {
     sourceMap: true,
     presets: [

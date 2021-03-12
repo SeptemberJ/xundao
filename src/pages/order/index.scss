@@ -63,29 +63,32 @@
 //     display: block;
 //   }
 // }
-.dragUpdataPage{width: 100%;height: calc(100vh - 80px);position:fixed;top:80px;overflow: hidden;background:#F3F0F3;
-  .downDragBox{
-      width: 100%;
-      top: 0px;
-      display: flex;
-      overflow: hidden;
-      justify-content: center;
-      align-items: center;
-      font-size: 30px;
-      position: absolute;
-  }
-  .upDragBox{
-      bottom: 0px;
-      width: 100%;
-      display: flex;
-      overflow: hidden;
-      justify-content: center;
-      align-items: center;
-      font-size: 30px;
-      position: absolute;
-  }
-  .dragUpdata{width: 100%;position: absolute;z-index: 999999;}
-  .downText{margin-left: 20px;}
+// .dragUpdataPage{width: 100%;height: calc(100vh - 80px);position:fixed;top:80px;overflow: hidden;background:#F3F0F3;
+//   .downDragBox{
+//       width: 100%;
+//       top: 0px;
+//       display: flex;
+//       overflow: hidden;
+//       justify-content: center;
+//       align-items: center;
+//       font-size: 30px;
+//       position: absolute;
+//   }
+//   .upDragBox{
+//       bottom: 0px;
+//       width: 100%;
+//       display: flex;
+//       overflow: hidden;
+//       justify-content: center;
+//       align-items: center;
+//       font-size: 30px;
+//       position: absolute;
+//   }
+//   .dragUpdata{width: 100%;position: absolute;z-index: 999999;}
+//   .downText{margin-left: 20px;}
+// }
+page{
+  background: #eee;
 }
 .Order{
   .contentBar {
@@ -234,4 +237,10 @@
   font-size: 32px;
   padding-left: 30px;
   color: #555555;
+}
+.loadStatus {
+  text-align: center;
+  color: #999;
+  height: 80px;
+  line-height: 80px;
 }

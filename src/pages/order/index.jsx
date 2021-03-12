@@ -25,31 +25,19 @@ import shouji from '../../images/shouji.png'
 class Order extends Component {
 
   config = {
-    navigationBarTitleText: '订单列表'
+    navigationBarTitleText: '订单列表',
+    enablePullDownRefresh: true
   }
 
   constructor(props) {
     super(props)
     this.state = {
       pageNo: 1,
-      pageSize: 5,
+      pageSize: 30,
+      loadStatus: false,
+      endData: false,
       orderList: [],
       currentTabIdx: 0,
-      noMore: false,
-      dargStyle: {//下拉框的样式
-        top: 0 + 'px'
-      },
-      downDragStyle: {//下拉图标的样式
-          height: 0 + 'px'
-      },
-      downText: '下拉刷新',
-      upDragStyle: {//上拉图标样式
-          height: 0 + 'px'
-      },
-      pullText: '上拉加载更多',
-      start_p: {},
-      scrollY:true,
-      dargState: 0, //刷新状态 0不做操作 1刷新 -1加载更多
       curOrder: {},
       curOrderIdx: '',
       isOpened: false,
@@ -79,15 +67,14 @@ class Order extends Component {
     }
   }
 
-  // componentDidShow () {
   componentWillMount () {
     if (this.$router.params.tab) {
       this.setState({
         currentTabIdx: Number(this.$router.params.tab)
       })
-      this.getOrderList(null, Number(this.$router.params.tab) + 1)
+      this.getOrderList(1, Number(this.$router.params.tab) + 1)
     } else {
-      this.getOrderList(null, this.state.currentTabIdx + 1)
+      this.getOrderList(1, this.state.currentTabIdx + 1)
     }
     Taro.getLocation({
       type: 'wgs84',
@@ -100,39 +87,49 @@ class Order extends Component {
     this.getFtypeOptions()
   }
 
-  getOrderList = (curPage, fstatus, reflash) => {
-    send.post('order/orderList', {pageNo: curPage ? curPage : this.state.pageNo, pageSize: this.state.pageSize, id: this.props.counter.userid, fstatus: fstatus}).then((res) => {
-      switch (res.data.respCode) {
-        case '0':
-          this.setState({
-            orderList: reflash ? res.data.data : [...this.state.orderList, ...res.data.data]
-          })
-          if (curPage && res.data.data.length == 0) {
-            // Taro.stopPullDownRefresh()
-            Taro.showToast({
-              title: '无更多数据',
-              icon: 'none',
-              duration: 2000
-            })
-            this.setState({
-              noMore: true
-            })
-            setTimeout(() => {
-              this.setState({
-                noMore: false
-              })
-            }, 2000)
-          }
-          //  _this.props.toUpdateUserInfo(openid, sessionKey, res.data.userid)
-          break
-        default:
-          Taro.showToast({
-            title: '订单获取失败',
-            icon: 'none',
-            duration: 1500
-          })
+  ScrollToLower = () => {
+    if (this.state.loadStatus) {
+      return false
+    }
+    // 加载数据
+    this.setState({
+      loadStatus: true
+    })
+    let nextPage = Math.ceil(this.state.orderList.length / this.state.pageSize) + 1
+    this.getOrderList(nextPage, Number(this.state.currentTabIdx) + 1)
+  }
+
+  getOrderList = (curPage, fstatus) => {
+    Taro.showLoading({
+      title: "加载中..."
+    })
+    this.setState({
+      endData: false
+    })
+    this.loadData(curPage, fstatus).then(({ list }) => {
+      if (list.length) {
+        this.setState({
+          orderList: [...this.state.orderList, ...list],
+          loadStatus: false,
+          endData: false
+        })
+      } else {
+        this.setState({
+          loadStatus: false,
+          endData: true
+        })
       }
-      // Taro.stopPullDownRefresh()
+      Taro.hideLoading()
+    });
+  }
+
+  loadData = (curPage, fstatus) => {
+    return new Promise((resolve, reject) => {
+      send.post('order/orderList', {pageNo: curPage, pageSize: this.state.pageSize, id: this.props.counter.userid, fstatus: fstatus}).then((res) => {
+        const list = res.data.data 
+        resolve({
+          list});
+      }).catch(reject)
     })
   }
 
@@ -278,141 +275,6 @@ class Order extends Component {
     Taro.navigateTo({
       url: '/pages/detail/index?id=' + id
     })
-  }
-
-  reduction() {//还原初始设置
-    const time = 0.5;
-    this.setState({
-        upDragStyle: {//上拉图标样式
-            height: 0 + 'px',
-            transition: `all ${time}s`
-        },
-        dargState: 0,
-        dargStyle: {
-            top: 0 + 'px',
-            transition: `all ${time}s`
-        },
-        downDragStyle: {
-            height: 0 + 'px',
-            transition: `all ${time}s`
-        },
-        scrollY:true
-    })
-    setTimeout(() => {
-        this.setState({
-            dargStyle: {
-                top: 0 + 'px'
-            },
-            upDragStyle: {//上拉图标样式
-                height: 0 + 'px'
-            },
-            pullText: '上拉加载更多',
-            downText: '下拉刷新'
-        })
-    }, time * 1000);
-  }
-  touchStart(e) {
-    this.setState({
-        start_p: e.touches[0]
-    })
-  }
-  touchmove(e) {
-    let that = this
-    let move_p = e.touches[0],//移动时的位置
-        deviationX = 0.30,//左右偏移量(超过这个偏移量不执行下拉操作)
-        deviationY = 30,//拉动长度（低于这个值的时候不执行）
-        maxY = 40;//拉动的最大高度
-
-    let start_x = this.state.start_p.clientX,
-        start_y = this.state.start_p.clientY,
-        move_x = move_p.clientX,
-        move_y = move_p.clientY;
-    //得到偏移数值
-    let dev = Math.abs(move_x - start_x) / Math.abs(move_y - start_y);
-    if (dev < deviationX) { //当偏移数值大于设置的偏移数值时则不执行操作
-      let pY = Math.abs(move_y - start_y) / 3.5;//拖动倍率（使拖动的时候有粘滞的感觉--试了很多次 这个倍率刚好）
-      // 下拉操作
-      if (move_y - start_y > 0) {
-        if (pY >= deviationY) {
-          this.setState({ dargState: 1, downText: '释放刷新' })
-        } else {
-          this.setState({ dargState: 0, downText: '下拉刷新' })
-        }
-        if (pY >= maxY) {
-          pY = maxY
-        }
-        this.setState({
-          dargStyle: {
-            top: pY + 'px'
-          },
-          downDragStyle: {
-            height: pY + 'px'
-          },
-          scrollY:false//拖动的时候禁用
-        })
-      }
-      // 上拉操作
-      if (start_y - move_y > 0) {
-        console.log('上拉操作')
-        if (pY >= deviationY) {
-          this.setState({ dargState: -1, pullText: '释放加载更多' })
-        } else {
-          this.setState({ dargState: 0, pullText: '上拉加载更多' })
-        }
-        if (pY >= maxY) {
-          pY = maxY
-        }
-        this.setState({
-          dargStyle: {
-            top: -pY + 'px'
-          },
-          upDragStyle: {
-            height: pY + 'px'
-          },
-          scrollY: false//拖动的时候禁用
-        })
-      }
-    }
-  }
-  pull = () => {
-    // 上拉
-    this.loadMore()
-  }
-  loadMore = () => {
-    let curPage = this.state.pageNo + 1
-    this.setState({
-      pageNo: curPage
-    })
-    this.getOrderList(curPage, this.state.currentTabIdx + 1)
-  }
-  down() {
-    // 下拉
-    this.getOrderList(1, this.state.currentTabIdx + 1, true)
-  }
-  ScrollToUpper() { //滚动到顶部事件
-    console.log('滚动到顶部事件')
-  }
-  ScrollToLower() { //滚动到底部事件
-    console.log('滚动到底部事件')
-    this.loadMore()
-  }
-  touchEnd(e) {
-    console.log('dargState-----------------', this.state.dargState)
-    if (this.state.dargState === 1) {
-        this.down()
-    } else if (this.state.dargState === -1) {
-        this.pull()
-    }
-    this.reduction()
-  }
-
-  onScrollToLower = () => {
-    console.log('on bottom---')
-    let curPage = this.state.pageNo + 1
-    this.setState({
-      pageNo: curPage
-    })
-    this.getOrderList(curPage, this.state.currentTabIdx + 1)
   }
 
   suspend = (order, idx) =>{
@@ -755,11 +617,8 @@ class Order extends Component {
   }
 
   render () {
-    let dargStyle = this.state.dargStyle;
-    let downDragStyle = this.state.downDragStyle;
-    let upDragStyle = this.state.upDragStyle;
     let currentTabIdx = this.state.currentTabIdx
-    const { orderList } = this.state
+    const { orderList, loadStatus, endData } = this.state
     const orders = orderList.map((order, idx) => {
       return <View key={order.id} className="orderItem">
           <View className="itemBar">
@@ -895,11 +754,10 @@ class Order extends Component {
 
     const scrollTop = 0
     const Threshold = 20
-    const { noMore } = this.state
     return (
       <View className='Order'>
         <AtMessage />
-        <View style='width:100%;height:50px;position:fixed;z-index:99;' >
+        <View style='width:100%;height:50px;position: fixed;z-index:99;overflow:hidden;' >
           <AtTabBar style="height: 50px"
             tabList={[
               { title: '待勘察',},
@@ -911,26 +769,24 @@ class Order extends Component {
             current={this.state.currentTabIdx}
           />
         </View>
-        <View className='dragUpdataPage'>
-          <View className='downDragBox' style={downDragStyle}>
-              <AtActivityIndicator></AtActivityIndicator>
-              <Text className='downText'>{this.state.downText}</Text>
-          </View>
+        <View style="width: 100%;position: relative;top:40px; background: #eee;">
           <ScrollView
-              style={dargStyle}
-              onTouchMove={this.touchmove}
-              onTouchEnd={this.touchEnd}
-              onTouchStart={this.touchStart}
-              onScrollToUpper={this.ScrollToUpper}
-              className='dragUpdata'
-              scrollY={this.state.scrollY}
-              scrollWithAnimation>
-              <View style='width:100%;height:85vh;background:#F3F0F3;' >{orders}</View>
+            scrollY
+            lowerThreshold="100"
+            onScrollToLower={this.ScrollToLower.bind(this)}
+            className='scrollview'
+            style="height: 100vh;"
+          >
+          <View>{ orders }</View>
+          {
+            loadStatus && <View className="loadStatus">加载中...
+            </View>
+          }
+          {
+            !loadStatus && endData && <View className="loadStatus">到底了
+            </View>
+          }
           </ScrollView>
-          <View className='upDragBox' style={upDragStyle}>
-              <AtActivityIndicator></AtActivityIndicator>
-              <Text className='downText'>{this.state.pullText}</Text>
-          </View>
         </View>
         <AtFloatLayout isOpened={this.state.isOpenedCarType} title="点击查看材料" onClose={this.handleCloseCarType.bind(this)}>
           {
