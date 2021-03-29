@@ -56,6 +56,7 @@ export default class SubmitAZ extends Component {
       checkSN: 'N', //  Y - 可以为空 N - 不可以为空
       SNCode: '',
       note: '',
+      sdcostnote: '',
       isbz: '',
       cable: '请选择',
       pipe: '请选择',
@@ -129,7 +130,8 @@ export default class SubmitAZ extends Component {
             fmeter: tmpInfo.fmeter,
             sum: tmpInfo.price,
             total: tmpInfo.price1,
-            note: tmpInfo.install_note
+            note: tmpInfo.install_note,
+            sdcostnote: tmpInfo.sdcostnote
           })
           this.setState({
             selectorChecked: curType.length > 0 ? curType[0].fname : '请选择',
@@ -438,6 +440,7 @@ export default class SubmitAZ extends Component {
       fstatus: '2',
       id: this.state.id,
       installNote: this.state.note,
+      sdcostnote: this.state.sdcostnote,
       ispure: this.state.pureInstall,
       sn: this.state.SNCode,
       // isbz: this.state.isbz == "null" ? null : this.state.isbz,
@@ -578,7 +581,7 @@ export default class SubmitAZ extends Component {
       })
       return false
     }
-    if (this.state.checkSN == 'N' && this.state.pureInstall == '否' && !this.state.SNCode) {
+    if (this.state.checkSN == 'Y' && this.state.pureInstall == '否' && !this.state.SNCode) {
       Taro.showToast({
         title: '请先扫SN码',
         icon: 'none',
@@ -631,6 +634,7 @@ export default class SubmitAZ extends Component {
     let installInfo = {
       id: this.state.id,
       installNote: this.state.note,
+      sdcostnote: this.state.sdcostnote,
       ispure: this.state.pureInstall,
       sn: this.state.SNCode,
       // isbz: this.state.isbz == "null" ? null : this.state.isbz,
@@ -708,6 +712,12 @@ export default class SubmitAZ extends Component {
   changeNote = (note) => {
     this.setState({
       note
+    })
+  }
+
+  changeCostNote = (sdcostnote) => {
+    this.setState({
+      sdcostnote
     })
   }
 
@@ -1010,7 +1020,7 @@ export default class SubmitAZ extends Component {
             onChange={this.onChange.bind(this, 4)}
             onImageClick={this.onImageClick.bind(this, 4)}
           />
-          <Text>请选择要上传的其他照片</Text>
+          <Text>请选择要上传的其他（安装文档，入网协议等）照片</Text>
           <AtImagePicker
             sourceType={['album', 'camera']}
             files={this.state.files5}
@@ -1067,7 +1077,7 @@ export default class SubmitAZ extends Component {
           /> */}
         </View>
 
-        <View className="pureInstall">
+        {/* <View className="pureInstall">
           <Text>是否纯安装：</Text>
           {
             (this.state.pureInstall == '严格出') && <Text>{ this.state.pureInstall }</Text>
@@ -1077,7 +1087,7 @@ export default class SubmitAZ extends Component {
             { this.state.pureInstall }
           </Picker>
           }
-        </View>
+        </View> */}
         <View className="SNCode">
           <Text>SN码：{ this.state.SNCode }</Text>
           <AtButton type='primary' size="small" onClick={this.scanCode}>点击扫码</AtButton>
@@ -1159,6 +1169,9 @@ export default class SubmitAZ extends Component {
               <AtIcon value='add' size='30' color='#6190e8'></AtIcon>
             </Picker>
           </View>
+        </View>
+        <View className="note">
+          <AtTextarea style='background:#fff;width:calc(100% - 40px);padding:20rpx 20rpx 0 20rpx;' maxLength={200} height={300} autoHeight placeholder='请输入超标费用详细说明：如线缆超标X米，路面开挖X米' value={this.state.sdcostnote} onChange={e => this.changeCostNote(e)}/>
         </View>
         <View className="note">
           <AtTextarea style='background:#fff;width:calc(100% - 40px);padding:20rpx 20rpx 0 20rpx;' maxLength={200} height={300} autoHeight placeholder='请输入安装备注' value={this.state.note} onChange={e => this.changeNote(e)}/>

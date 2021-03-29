@@ -314,6 +314,10 @@ class Detail extends Component {
             <Text></Text>
             <Text style="color: #f35957;">{ orderDeatil.price2 + '元' }</Text>
           </View>
+          <Text style="margin-top:10rpx;padding-top:10rpx;border-top:1rpx dashed #ccc;display:block;">超标备注：</Text>
+          <View className="note">
+            <Text>{ orderDeatil.sdcostnote }</Text>
+          </View>
         </View>
         <View className="submitInfo">
           <Text style="margin-top:10px;display:inline-block;">勘察图片：</Text>

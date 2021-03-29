@@ -72,6 +72,16 @@
      border: 1px #d6e4ef solid;
     }
   }
+  .note{
+    width: 100%;
+    min-height: 60px;
+    margin: 10px 0;
+    Text{
+      color: #555555;
+      text-indent: 64px;
+      display: block;
+    }
+  }
   .submitInfo{
     width: calc(100% - 90px);
     padding: 0px 10px 20px 10px;
