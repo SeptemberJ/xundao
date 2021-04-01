@@ -289,27 +289,27 @@ class Detail extends Component {
               <Text> </Text>
             </View>
           </View>
-          <View className="pListTit" style="background: #F3F0F3;">
+          {/* <View className="pListTit" style="background: #F3F0F3;">
             <Text>规格</Text>
             <Text>最高价格</Text>
             <Text>实际用量</Text>
             <Text>实际收费</Text>
           </View>
-          { productionList }
+          { productionList } */}
           <View className="pListTit">
-            <Text style="color: #f35957;">合计</Text>
-            <Text></Text>
-            <Text></Text>
-            <Text style="color: #f35957;">{ orderDeatil.price + '元' }</Text>
-          </View>
-          <View className="pListTit">
-            <Text style="color: #f35957;">实际费用</Text>
+            <Text style="color: #f35957;">实际费用金额</Text>
             <Text></Text>
             <Text></Text>
             <Text style="color: #f35957;">{ orderDeatil.price1 + '元' }</Text>
           </View>
           <View className="pListTit">
-            <Text style="color: #f35957;">优惠</Text>
+            <Text style="color: #f35957;">超标费用金额</Text>
+            <Text></Text>
+            <Text></Text>
+            <Text style="color: #f35957;">{ orderDeatil.price + '元' }</Text>
+          </View>
+          <View className="pListTit">
+            <Text style="color: #f35957;">优惠金额</Text>
             <Text></Text>
             <Text></Text>
             <Text style="color: #f35957;">{ orderDeatil.price2 + '元' }</Text>
