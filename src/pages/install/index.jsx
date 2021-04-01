@@ -63,8 +63,8 @@ export default class SubmitAZ extends Component {
       fmeter: '',
       overPList: [], // 超标项目list
       productions: [],
-      sum: 0, // 应收
-      total: 0 // 实收
+      overcost: 0, // 超标费用
+      discount: 0 // 优惠
     }
   }
   componentWillMount () {
@@ -84,18 +84,18 @@ export default class SubmitAZ extends Component {
   }
 
   componentDidUpdate(prevProps, prevState) {
-    if (prevState.fmeter !== this.state.fmeter) {
-      this.setState({
-        productions: [],
-        total: 0,
-        sum: 0
-      })
-      this.getOverPList(this.state.id, this.state.fmeter)
-    } else {
-      if (prevState.productions !== this.state.productions) {
-        this.updateSum(this.state.productions)
-      }
-    }
+    // if (prevState.fmeter !== this.state.fmeter) {
+    //   this.setState({
+    //     productions: [],
+    //     overcost: 0,
+    //     discount: 0
+    //   })
+    //   this.getOverPList(this.state.id, this.state.fmeter)
+    // } else {
+    //   if (prevState.productions !== this.state.productions) {
+    //     this.updateSum(this.state.productions)
+    //   }
+    // }
   }
   getCurFnumber = (item) => {
     return item.age >= 18;
@@ -128,8 +128,8 @@ export default class SubmitAZ extends Component {
             cable: tmpInfo.cable ? tmpInfo.cable : '请选择',
             pipe: tmpInfo.pipe ? tmpInfo.pipe : '请选择',
             fmeter: tmpInfo.fmeter,
-            sum: tmpInfo.price,
-            total: tmpInfo.price1,
+            overcost: tmpInfo.price,
+            discount: tmpInfo.price - tmpInfo.price1,
             note: tmpInfo.install_note,
             sdcostnote: tmpInfo.sdcostnote
           })
@@ -450,9 +450,9 @@ export default class SubmitAZ extends Component {
       fnumber: this.state.fnumber,
       post: this.state.selectorPost === '请选择' ? null : (this.state.selectorPost === '无' ? '' : this.state.post),
       leakpro: this.state.selectorLeakpro === '请选择' ? null : (this.state.selectorLeakpro === '无' ? '' : this.state.leakpro),
-      price: this.state.sum, // 应收
-      price1: this.state.total, // 实收
-      price2: this.state.sum - this.state.total, // 优惠
+      price: this.state.overcost, // 超标费用
+      price1: this.state.overcost - this.state.discount, // 实收
+      price2: this.state.discount, // 优惠
       isinstall: this.state.pureInstall,
       fcontent: [],
       cost: JSON.stringify(costTmp)
@@ -644,9 +644,9 @@ export default class SubmitAZ extends Component {
       fnumber: this.state.fnumber,
       post: this.state.selectorPost === '无' ? '' : this.state.post,
       leakpro: this.state.selectorLeakpro === '无' ? '' : this.state.leakpro,
-      price: this.state.sum, // 应收
-      price1: this.state.total, // 实收
-      price2: this.state.sum - this.state.total, // 优惠
+      price: this.state.overcost, // 超标费用
+      price1: this.state.overcost - this.state.discount, // 实收
+      price2: this.state.discount, // 优惠
       isinstall: this.state.pureInstall,
       fcontent: [],
       cost: JSON.stringify(costTmp)
@@ -777,9 +777,15 @@ export default class SubmitAZ extends Component {
     })
   }
 
-  handleChange_total (val) {
+  handleChange_overcost (val) {
     this.setState({
-      total: val
+      overcost: val
+    })
+  }
+
+  handleChange_discount (val) {
+    this.setState({
+      discount: val
     })
   }
 
@@ -1130,21 +1136,21 @@ export default class SubmitAZ extends Component {
         </View>
         <View className="contentBar">
           <Text className="columnTit">超标项目 </Text>
-          <View className="pListTit" style="background: #F3F0F3;">
+          {/* <View className="pListTit" style="background: #F3F0F3;">
             <Text>规格</Text>
             <Text>最高价格</Text>
             <Text>实际用量</Text>
             <Text>实际收费</Text>
           </View>
-          { productionList }
+          { productionList } */}
           <View className="pListTit" style="color:#f35957;margin-top: 6px;">
-            <Text>合计</Text>
+            <Text>实际费用金额</Text>
             <Text></Text>
             <Text></Text>
-            <Text className="TextAlignR">{ this.state.sum }</Text>
+            <Text className="TextAlignR">{ this.state.overcost -  this.state.discount }</Text>
           </View>
           <View className="pListTit" style="color:#f35957;">
-            <Text>实际费用</Text>
+            <Text>请输入超标费用金额</Text>
             <Text></Text>
             <Text></Text>
             <View className="TextAlignR">
@@ -1152,23 +1158,32 @@ export default class SubmitAZ extends Component {
                 name='total'
                 confirmType="完成"
                 type='digit'
-                value={ this.state.total }
+                value={ this.state.overcost }
                 placeholder="请输入"
-                onChange={this.handleChange_total.bind(this)}
+                onChange={this.handleChange_overcost.bind(this)}
               />
             </View>
           </View>
           <View className="pListTit" style="color:#f35957;margin-bottom: 20px;">
-            <Text>优惠费用</Text>
+            <Text>请输入优惠金额</Text>
             <Text></Text>
             <Text></Text>
-            <Text className="TextAlignR">{ this.state.sum - this.state.total }</Text>
+            <View className="TextAlignR">
+              <AtInput className="inputFee"
+                  name='total'
+                  confirmType="完成"
+                  type='digit'
+                  value={ this.state.discount }
+                  placeholder="请输入"
+                  onChange={this.handleChange_discount.bind(this)}
+                />
+            </View>
           </View>
-          <View class="plus">
+          {/* <View class="plus">
             <Picker mode='selector' range={this.state.overPList} rangeKey="fmodel" onChange={this.onAddOne}>
               <AtIcon value='add' size='30' color='#6190e8'></AtIcon>
             </Picker>
-          </View>
+          </View> */}
         </View>
         <View className="note">
           <AtTextarea style='background:#fff;width:calc(100% - 40px);padding:20rpx 20rpx 0 20rpx;' maxLength={200} height={300} autoHeight placeholder='请输入超标费用详细说明：如线缆超标X米，路面开挖X米' value={this.state.sdcostnote} onChange={e => this.changeCostNote(e)}/>
